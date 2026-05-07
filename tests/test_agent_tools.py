@@ -109,6 +109,7 @@ class TestAgentTools:
 
     def test_check_feasibility_tool(self, sample_data):
         run_schedule_tool.invoke({"strategy": "deadline_first"})
+        set_baseline_schedule_tool.invoke({"iteration_name": "测试迭代", "note": ""})
         result = check_feasibility_tool.invoke({
             "task_id": "REQ-003",
             "target_deadline": "2026-05-15",
@@ -198,6 +199,7 @@ class TestAgentTools:
 
     def test_check_feasibility_missing_task_id(self, sample_data):
         run_schedule_tool.invoke({"strategy": "deadline_first"})
+        set_baseline_schedule_tool.invoke({"iteration_name": "测试", "note": ""})
         result = check_feasibility_tool.invoke({
             "task_id": "",
             "target_deadline": "2026-05-15",
@@ -208,6 +210,7 @@ class TestAgentTools:
 
     def test_check_feasibility_invalid_deadline(self, sample_data):
         run_schedule_tool.invoke({"strategy": "deadline_first"})
+        set_baseline_schedule_tool.invoke({"iteration_name": "测试迭代", "note": ""})
         result = check_feasibility_tool.invoke({
             "task_id": "REQ-003",
             "target_deadline": "明天",
@@ -237,6 +240,7 @@ class TestAgentTools:
 
     def test_check_feasibility_missing_target_deadline(self, sample_data):
         run_schedule_tool.invoke({"strategy": "deadline_first"})
+        set_baseline_schedule_tool.invoke({"iteration_name": "测试", "note": ""})
         result = check_feasibility_tool.invoke({
             "task_id": "REQ-003",
             "target_deadline": "",

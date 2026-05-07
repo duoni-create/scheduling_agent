@@ -334,14 +334,38 @@ def check_person_vacation_feasibility(
 
     comparison = compare_schedule_results(baseline_result, simulated_result)
 
+    # feasible 判断：如果 simulated_result 新增无法排期任务，则 feasible=false
+    baseline_unscheduled_ids = {(i.req_id, i.subtask_type) for i in baseline_result.unscheduled_items}
+    simulated_unscheduled_ids = {(i.req_id, i.subtask_type) for i in simulated_result.unscheduled_items}
+    newly_unscheduled = simulated_unscheduled_ids - baseline_unscheduled_ids
+    feasible = len(newly_unscheduled) == 0
+
+    # has_impact 判断
+    has_impact = (
+        comparison.get("summary", {}).get("总变动数", 0) > 0
+        or comparison.get("improved_count", 0) > 0
+        or comparison.get("worsened_count", 0) > 0
+    )
+
+    if feasible and has_impact:
+        message = "人员请假可行性分析完成。该请假方案可行，但会影响部分任务。"
+    elif not feasible:
+        message = "人员请假可行性分析完成。该请假方案不可行，会导致新增无法排期任务。"
+    elif not has_impact:
+        message = "人员请假可行性分析完成。该请假方案对正式排期无明显影响。"
+    else:
+        message = "人员请假可行性分析完成。"
+
     return {
         "success": True,
-        "base": "baseline",
+        "analysis_type": "person_vacation",
+        "feasible": feasible,
+        "has_impact": has_impact,
         "change_summary": f"模拟 {person} 从 {start_date} 到 {end_date} 休假",
         "baseline_summary": baseline_result.summary,
         "simulated_summary": simulated_result.summary,
         "comparison": comparison,
-        "message": "模拟完成，已和正式排期进行对比。",
+        "message": message,
     }
 
 
@@ -435,6 +459,7 @@ def check_requirement_deadline_feasibility(
 
     return {
         "success": True,
+        "analysis_type": "requirement_deadline",
         "req_id": req_id,
         "target_deadline": target_deadline,
         "feasible": feasible,
