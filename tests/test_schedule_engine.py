@@ -219,3 +219,49 @@ class TestScheduleEngine:
 
         for d, count in date_count.items():
             assert count <= 1, f"daily_hours=4 的资源在 {d} 出现了 {count} 个槽位，应最多 1 个"
+
+    def test_assignee_filtering(self):
+        """测试指定人员过滤"""
+        requirements = [
+            Requirement(
+                req_id="REQ-001", name="指定人员测试", frontend_days=1, backend_days=1, test_days=0,
+                priority="P0", deadline=date(2026, 5, 20), dependencies=[], status="待排期",
+                frontend_assignee="张三",
+            ),
+        ]
+        resources = [
+            Resource(name="张三", roles=["前端"], available_start=date(2026, 5, 1), available_end=date(2026, 6, 30)),
+            Resource(name="李四", roles=["前端"], available_start=date(2026, 5, 1), available_end=date(2026, 6, 30)),
+            Resource(name="王五", roles=["后端"], available_start=date(2026, 5, 1), available_end=date(2026, 6, 30)),
+        ]
+        holidays = []
+        result = schedule_requirements(requirements, resources, holidays, start_date=date(2026, 5, 1))
+
+        frontend_item = next(item for item in result.items if item.subtask_type == "前端")
+        backend_item = next(item for item in result.items if item.subtask_type == "后端")
+
+        # 前端应该分配给张三
+        assert frontend_item.owner == "张三"
+        # 后端没有指定，可以分配给王五
+        assert backend_item.owner == "王五"
+
+    def test_assignee_not_available(self):
+        """测试指定人员不具备角色"""
+        requirements = [
+            Requirement(
+                req_id="REQ-001", name="指定人员测试", frontend_days=1, backend_days=0, test_days=0,
+                priority="P0", deadline=date(2026, 5, 20), dependencies=[], status="待排期",
+                frontend_assignee="王五",
+            ),
+        ]
+        resources = [
+            Resource(name="张三", roles=["前端"], available_start=date(2026, 5, 1), available_end=date(2026, 6, 30)),
+            Resource(name="王五", roles=["后端"], available_start=date(2026, 5, 1), available_end=date(2026, 6, 30)),
+        ]
+        holidays = []
+        result = schedule_requirements(requirements, resources, holidays, start_date=date(2026, 5, 1))
+
+        # 王五不具备前端角色，应该无法排期
+        assert len(result.unscheduled_items) == 1
+        assert result.unscheduled_items[0].subtask_type == "前端"
+        assert "王五" in result.unscheduled_items[0].reason

@@ -57,11 +57,12 @@ def split_subtasks(requirement: Requirement) -> list[dict]:
     """将需求拆分为子任务"""
     subtasks = []
     # 固定顺序：后端 -> 前端 -> 测试
-    for task_type, days in [
-        ("后端", requirement.backend_days),
-        ("前端", requirement.frontend_days),
-        ("测试", requirement.test_days),
-    ]:
+    task_configs = [
+        ("后端", requirement.backend_days, requirement.backend_assignee),
+        ("前端", requirement.frontend_days, requirement.frontend_assignee),
+        ("测试", requirement.test_days, requirement.test_assignee),
+    ]
+    for task_type, days, assigned_person in task_configs:
         if days > 0:
             subtasks.append({
                 "req_id": requirement.req_id,
@@ -69,6 +70,7 @@ def split_subtasks(requirement: Requirement) -> list[dict]:
                 "type": task_type,
                 "days": days,
                 "deadline": requirement.deadline,
+                "assigned_person": assigned_person,
             })
     return subtasks
 
@@ -177,9 +179,18 @@ def schedule_requirements(
 
             for subtask in subtasks:
                 task_type = subtask["type"]
+                assigned_person = subtask.get("assigned_person", "")
                 candidates = [r for r in resources if task_type in r.roles]
 
+                # 如果指定了具体人员，则过滤候选人
+                if assigned_person:
+                    candidates = [r for r in candidates if r.name == assigned_person]
+
                 if not candidates:
+                    if assigned_person:
+                        reason = f"指定人员'{assigned_person}'不具备'{task_type}'角色或不可用"
+                    else:
+                        reason = f"没有具备'{task_type}'角色的可用人员"
                     item = ScheduleItem(
                         req_id=req.req_id,
                         req_name=req.name,
@@ -192,7 +203,7 @@ def schedule_requirements(
                         days=subtask["days"],
                         deadline=req.deadline,
                         status="无法排期",
-                        reason=f"没有具备'{task_type}'角色的可用人员",
+                        reason=reason,
                     )
                     unscheduled_items.append(item)
                     continue

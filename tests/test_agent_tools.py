@@ -14,6 +14,9 @@ from schedule_agent.agent_tools import (
     explain_delay_tool,
     compare_with_baseline_tool,
     export_schedule_tool,
+    check_person_vacation_feasibility,
+    check_requirement_deadline_feasibility,
+    check_assignment_feasibility,
 )
 from schedule_agent.sample_generator import generate_sample_excel
 from schedule_agent.excel_parser import parse_excel
@@ -260,3 +263,60 @@ class TestAgentTools:
             req.dependencies = original_deps.get(req.req_id, [])
         assert result["valid"] is False
         assert any("循环依赖" in e for e in result["errors"])
+
+    def test_check_person_vacation_feasibility(self, sample_data):
+        """测试人员休假可行性分析"""
+        # 先设置 baseline
+        run_schedule_tool.invoke({"strategy": "deadline_first"})
+        set_baseline_schedule_tool.invoke({"iteration_name": "测试迭代"})
+
+        result = check_person_vacation_feasibility.invoke({
+            "person": "张三",
+            "start_date": "2026-05-11",
+            "end_date": "2026-05-15",
+            "strategy": "deadline_first",
+        })
+
+        assert result["success"] is True
+        assert "comparison" in result
+        assert result["change_summary"] is not None
+
+    def test_check_requirement_deadline_feasibility(self, sample_data):
+        """测试需求 deadline 可行性分析"""
+        result = check_requirement_deadline_feasibility.invoke({
+            "req_id": "REQ-001",
+            "target_deadline": "2026-05-15",
+            "strategy": "deadline_first",
+        })
+
+        assert result["success"] is True
+        assert "delay_status" in result
+        assert result["req_id"] == "REQ-001"
+
+    def test_check_assignment_feasibility(self, sample_data):
+        """测试指定人员分配可行性分析"""
+        # 先设置 baseline
+        run_schedule_tool.invoke({"strategy": "deadline_first"})
+        set_baseline_schedule_tool.invoke({"iteration_name": "测试迭代"})
+
+        result = check_assignment_feasibility.invoke({
+            "req_id": "REQ-001",
+            "frontend_assignee": "张三",
+            "strategy": "deadline_first",
+        })
+
+        assert result["success"] is True
+        assert result["req_id"] == "REQ-001"
+        assert result["assignment"]["frontend_assignee"] == "张三"
+        assert "delay_status" in result
+
+    def test_check_assignment_feasibility_invalid_person(self, sample_data):
+        """测试指定不存在的人员"""
+        result = check_assignment_feasibility.invoke({
+            "req_id": "REQ-001",
+            "backend_assignee": "不存在的人",
+            "strategy": "deadline_first",
+        })
+
+        assert result["success"] is True  # 工具本身成功
+        assert result["delay_status"]["unscheduled_subtasks"] > 0

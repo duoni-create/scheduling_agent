@@ -56,7 +56,8 @@ def parse_excel(file_path: str):
     df_req = pd.read_excel(file_path, sheet_name="需求表")
     validate_required_columns(df_req, [
         "需求ID", "需求名称", "前端工时", "后端工时", "测试工时",
-        "优先级", "Deadline", "依赖需求", "状态", "备注"
+        "优先级", "Deadline", "依赖需求", "状态", "备注",
+        "后端指定人员", "前端指定人员", "测试指定人员"
     ], "需求表")
 
     requirements = []
@@ -116,6 +117,11 @@ def parse_excel(file_path: str):
             if dep == req_id:
                 raise ValueError(f"需求 {req_id} 不能依赖自己")
 
+        # 解析指定人员（允许为空）
+        backend_assignee = str(row.get("后端指定人员", "")).strip() if pd.notna(row.get("后端指定人员", "")) else ""
+        frontend_assignee = str(row.get("前端指定人员", "")).strip() if pd.notna(row.get("前端指定人员", "")) else ""
+        test_assignee = str(row.get("测试指定人员", "")).strip() if pd.notna(row.get("测试指定人员", "")) else ""
+
         req = Requirement(
             req_id=req_id,
             name=req_name,
@@ -127,6 +133,9 @@ def parse_excel(file_path: str):
             dependencies=dependencies,
             status=status,
             memo=str(row.get("备注", "")).strip() if pd.notna(row.get("备注", "")) else "",
+            backend_assignee=backend_assignee,
+            frontend_assignee=frontend_assignee,
+            test_assignee=test_assignee,
         )
         requirements.append(req)
 

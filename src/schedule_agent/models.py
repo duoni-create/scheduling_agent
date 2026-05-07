@@ -14,6 +14,16 @@ class Requirement(BaseModel):
     dependencies: list[str] = []
     status: str
     memo: str = ""
+    backend_assignee: str = ""
+    frontend_assignee: str = ""
+    test_assignee: str = ""
+
+    @field_validator("backend_assignee", "frontend_assignee", "test_assignee")
+    @classmethod
+    def validate_assignee(cls, v):
+        if v is None:
+            return ""
+        return str(v).strip()
 
     @field_validator("priority")
     @classmethod

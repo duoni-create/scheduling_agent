@@ -25,6 +25,14 @@ def get_connection(db_path: str | None = None):
     return conn
 
 
+def _ensure_column(cursor, table: str, column: str, col_type: str):
+    """确保表中有指定列，如果没有则添加"""
+    cursor.execute(f"PRAGMA table_info({table})")
+    existing = [row["name"] for row in cursor.fetchall()]
+    if column not in existing:
+        cursor.execute(f"ALTER TABLE {table} ADD COLUMN {column} {col_type}")
+
+
 def init_db(db_path: str | None = None):
     """初始化数据库表"""
     conn = get_connection(db_path)
@@ -58,11 +66,19 @@ def init_db(db_path: str | None = None):
                 dependencies_json TEXT,
                 status TEXT,
                 memo TEXT,
+                backend_assignee TEXT DEFAULT '',
+                frontend_assignee TEXT DEFAULT '',
+                test_assignee TEXT DEFAULT '',
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL,
                 FOREIGN KEY(iteration_id) REFERENCES iterations(id)
             )
         """)
+
+        # 迁移：为旧表添加 assignee 列
+        _ensure_column(cursor, "requirements", "backend_assignee", "TEXT DEFAULT ''")
+        _ensure_column(cursor, "requirements", "frontend_assignee", "TEXT DEFAULT ''")
+        _ensure_column(cursor, "requirements", "test_assignee", "TEXT DEFAULT ''")
 
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS resources (
@@ -181,8 +197,9 @@ def save_baseline_to_db(
             cursor.execute("""
                 INSERT INTO requirements
                 (iteration_id, req_id, req_name, frontend_days, backend_days, test_days,
-                 priority, deadline, dependencies_json, status, memo, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 priority, deadline, dependencies_json, status, memo,
+                 backend_assignee, frontend_assignee, test_assignee, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 iteration_id,
                 req.req_id,
@@ -195,6 +212,9 @@ def save_baseline_to_db(
                 json.dumps(req.dependencies, ensure_ascii=False) if req.dependencies else None,
                 req.status,
                 req.memo,
+                getattr(req, "backend_assignee", ""),
+                getattr(req, "frontend_assignee", ""),
+                getattr(req, "test_assignee", ""),
                 now,
                 now,
             ))
@@ -326,6 +346,9 @@ def load_current_baseline_from_db(
                 dependencies=deps,
                 status=row["status"] or "待排期",
                 memo=row["memo"] or "",
+                backend_assignee=row["backend_assignee"] or "",
+                frontend_assignee=row["frontend_assignee"] or "",
+                test_assignee=row["test_assignee"] or "",
             ))
 
         # 还原 resources

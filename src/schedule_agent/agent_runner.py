@@ -14,9 +14,41 @@ from .agent_tools import (
     explain_delay_tool,
     compare_with_baseline_tool,
     export_schedule_tool,
+    check_person_vacation_feasibility,
+    check_requirement_deadline_feasibility,
+    check_assignment_feasibility,
 )
 
-load_dotenv()
+load_dotenv(override=True)
+
+
+def _get_openai_config():
+    # Reload .env on each call so Streamlit reflects updated local config
+    # without requiring a full process restart.
+    load_dotenv(override=True)
+    api_key = (os.getenv("OPENAI_API_KEY") or "").strip().strip('"').strip("'")
+    base_url = (os.getenv("OPENAI_BASE_URL") or "https://api.openai.com/v1").strip().strip('"').strip("'")
+    model = (os.getenv("OPENAI_MODEL") or "gpt-4o-mini").strip().strip('"').strip("'")
+    return api_key, base_url, model
+
+
+def _format_agent_error(error: Exception, base_url: str, model: str) -> str:
+    message = str(error)
+
+    if "401" in message and "Invalid Authentication" in message:
+        return (
+            "Agent 鉴权失败：当前 OPENAI_API_KEY 无效，或与 OPENAI_BASE_URL 不匹配。"
+            f" 当前 base_url={base_url}。"
+        )
+
+    if "404" in message and "resource_not_found_error" in message:
+        return (
+            "Agent 接口地址或模型配置不正确：服务端返回 404。"
+            f" 当前 base_url={base_url}，model={model}。"
+            " 请优先检查 base_url 是否为兼容 OpenAI 的 /v1 接口地址。"
+        )
+
+    return f"Agent 运行出错: {message}"
 
 SYSTEM_PROMPT = """你是一个两周迭代排期助手 Agent。
 
@@ -36,11 +68,13 @@ SYSTEM_PROMPT = """你是一个两周迭代排期助手 Agent。
 
 工作规范：
 1. 用户说"正式排期"时，应调用 set_baseline_schedule_tool 确认。
-2. 用户说"如果某人请假"时，应调用 simulate_change_tool，然后调用 compare_with_baseline_tool 对比。
-3. 用户说"导出排期"时，默认导出 baseline。
-4. 如果还没有 baseline，要提示用户先设为正式排期。
-5. 如果工具返回失败，直接解释失败原因，不要编造替代结果。
-6. 回答要简洁、清楚，用中文。
+2. 用户说"如果某人请假"时，应调用 check_person_vacation_feasibility。
+3. 用户说"检查某需求能否提前"时，应调用 check_requirement_deadline_feasibility。
+4. 用户说"指定某人做某需求"时，应调用 check_assignment_feasibility。
+5. 用户说"导出排期"时，默认导出 baseline。
+6. 如果还没有 baseline，要提示用户先设为正式排期。
+7. 如果工具返回失败，直接解释失败原因，不要编造替代结果。
+8. 回答要简洁、清楚，用中文。
 
 参数完整性规范：
 - 当用户要求模拟人员请假时，必须同时具备：人员姓名、请假开始日期、请假结束日期。
@@ -53,9 +87,7 @@ SYSTEM_PROMPT = """你是一个两周迭代排期助手 Agent。
 
 def create_schedule_agent():
     """创建排期助手 Agent"""
-    api_key = os.getenv("OPENAI_API_KEY")
-    base_url = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
-    model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+    api_key, base_url, model = _get_openai_config()
 
     if not api_key:
         return None
@@ -78,6 +110,9 @@ def create_schedule_agent():
         explain_delay_tool,
         compare_with_baseline_tool,
         export_schedule_tool,
+        check_person_vacation_feasibility,
+        check_requirement_deadline_feasibility,
+        check_assignment_feasibility,
     ]
 
     agent = create_agent(
@@ -90,7 +125,7 @@ def create_schedule_agent():
 
 def run_agent(user_text: str) -> str:
     """运行 Agent"""
-    api_key = os.getenv("OPENAI_API_KEY")
+    api_key, base_url, model = _get_openai_config()
     if not api_key:
         return "当前没有配置 OPENAI_API_KEY，无法使用自然语言 Agent。你仍然可以通过页面按钮进行排期。"
 
@@ -107,4 +142,4 @@ def run_agent(user_text: str) -> str:
             return messages[-1].content
         return "Agent 没有返回结果"
     except Exception as e:
-        return f"Agent 运行出错: {str(e)}"
+        return _format_agent_error(e, base_url, model)

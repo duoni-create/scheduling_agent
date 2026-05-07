@@ -8,6 +8,11 @@ from .export_service import export_schedule_to_excel
 from .baseline_store import save_baseline, load_baseline
 from .sqlite_store import get_db_path
 from .models import Requirement, Resource, Holiday, ScheduleResult
+from .feasibility_service import (
+    compare_schedule_results,
+    get_requirement_latest_finish,
+    get_requirement_delay_status,
+)
 from .validation import (
     validate_strategy,
     validate_required_text,
@@ -247,44 +252,30 @@ def load_baseline_schedule_tool() -> dict:
 
 
 @tool
-def simulate_change_tool(
-    change_type: str = "",
+def check_person_vacation_feasibility(
     person: str = "",
     start_date: str = "",
     end_date: str = "",
     strategy: str = "deadline_first",
 ) -> dict:
-    """模拟变化并重新排期，与正式排期对比
+    """检查人员休假对排期的影响，与 baseline 对比
 
     Args:
-        change_type: 变化类型，目前只支持 person_vacation
         person: 人员姓名
         start_date: 休假开始日期，格式 YYYY-MM-DD
         end_date: 休假结束日期，格式 YYYY-MM-DD
         strategy: 排期策略
     """
-    # 参数校验
-    is_valid, error_msg = validate_required_text(change_type, "change_type")
+    is_valid, error_msg = validate_required_text(person, "人员姓名")
     if not is_valid:
         return {"success": False, "message": error_msg}
 
-    if change_type != "person_vacation":
-        return {
-            "success": False,
-            "message": f"当前只支持人员休假模拟 (person_vacation)，不支持的 change_type: {change_type}",
-        }
-
-    is_valid, error_msg = validate_required_text(person, "人员姓名")
-    if not is_valid:
-        return {"success": False, "message": "模拟请假影响需要提供人员姓名。"}
-
     if not start_date or not str(start_date).strip():
-        return {"success": False, "message": "模拟请假影响需要提供请假开始日期。"}
+        return {"success": False, "message": "需要提供请假开始日期。"}
 
     if not end_date or not str(end_date).strip():
-        return {"success": False, "message": "模拟请假影响需要提供请假结束日期。"}
+        return {"success": False, "message": "需要提供请假结束日期。"}
 
-    # strategy 校验
     is_valid, error_msg = validate_strategy(strategy)
     if not is_valid:
         return {"success": False, "message": error_msg}
@@ -304,7 +295,6 @@ def simulate_change_tool(
     data = project_context.get_data()
     baseline_result = project_context.get_baseline_result()
 
-    # 深拷贝并修改
     new_resources = copy.deepcopy(data.resources)
     target_resource = None
     for r in new_resources:
@@ -334,71 +324,41 @@ def simulate_change_tool(
     new_data = copy.deepcopy(data)
     new_data.resources = new_resources
 
-    after_result = schedule_requirements(
+    simulated_result = schedule_requirements(
         new_data.requirements,
         new_data.resources,
         new_data.holidays,
         strategy=strategy,
     )
-    project_context.set_simulated_result(after_result)
+    project_context.set_simulated_result(simulated_result)
 
-    # 对比受影响项（和 baseline 对比）
-    before_map = {}
-    for item in baseline_result.items:
-        key = (item.req_id, item.subtask_type)
-        before_map[key] = item
-
-    affected = []
-    for item in after_result.items:
-        key = (item.req_id, item.subtask_type)
-        before_item = before_map.get(key)
-        if before_item:
-            changes = []
-            if before_item.owner != item.owner:
-                changes.append(f"负责人从 {before_item.owner} 变为 {item.owner}")
-            if before_item.start_date != item.start_date:
-                changes.append(f"开始日期从 {before_item.start_date} 变为 {item.start_date}")
-            if before_item.start_half != item.start_half:
-                changes.append(f"开始半天从 {before_item.start_half} 变为 {item.start_half}")
-            if before_item.end_date != item.end_date:
-                changes.append(f"结束日期从 {before_item.end_date} 变为 {item.end_date}")
-            if before_item.end_half != item.end_half:
-                changes.append(f"结束半天从 {before_item.end_half} 变为 {item.end_half}")
-            if before_item.delayed != item.delayed:
-                changes.append(f"延期状态从 {before_item.delayed} 变为 {item.delayed}")
-            if before_item.delay_days != item.delay_days:
-                changes.append(f"延期天数从 {before_item.delay_days} 变为 {item.delay_days}")
-
-            if changes:
-                affected.append({
-                    "req_id": item.req_id,
-                    "req_name": item.req_name,
-                    "subtask_type": item.subtask_type,
-                    "changes": changes,
-                })
+    comparison = compare_schedule_results(baseline_result, simulated_result)
 
     return {
         "success": True,
         "base": "baseline",
         "change_summary": f"模拟 {person} 从 {start_date} 到 {end_date} 休假",
         "baseline_summary": baseline_result.summary,
-        "simulated_summary": after_result.summary,
-        "affected_items": affected,
+        "simulated_summary": simulated_result.summary,
+        "comparison": comparison,
         "message": "模拟完成，已和正式排期进行对比。",
     }
 
 
 @tool
-def check_feasibility_tool(task_id: str = "", target_deadline: str = "", strategy: str = "deadline_first") -> dict:
+def check_requirement_deadline_feasibility(
+    req_id: str = "",
+    target_deadline: str = "",
+    strategy: str = "deadline_first",
+) -> dict:
     """检查某个需求能否提前到指定日期前完成
 
     Args:
-        task_id: 需求ID
+        req_id: 需求ID
         target_deadline: 目标日期，格式 YYYY-MM-DD
         strategy: 排期策略
     """
-    # 参数校验
-    is_valid, error_msg = validate_required_text(task_id, "task_id")
+    is_valid, error_msg = validate_required_text(req_id, "req_id")
     if not is_valid:
         return {"success": False, "message": error_msg}
 
@@ -422,11 +382,10 @@ def check_feasibility_tool(task_id: str = "", target_deadline: str = "", strateg
     except ValueError as e:
         return {"success": False, "message": str(e)}
 
-    # 深拷贝并修改 deadline
     new_requirements = copy.deepcopy(data.requirements)
     found = False
     for req in new_requirements:
-        if req.req_id == task_id:
+        if req.req_id == req_id:
             req.deadline = target
             found = True
             break
@@ -434,69 +393,148 @@ def check_feasibility_tool(task_id: str = "", target_deadline: str = "", strateg
     if not found:
         return {
             "success": False,
-            "message": f"找不到需求 {task_id}",
+            "message": f"找不到需求 {req_id}",
         }
 
-    result = schedule_requirements(
+    simulated_result = schedule_requirements(
         new_requirements,
         copy.deepcopy(data.resources),
         copy.deepcopy(data.holidays),
         strategy=strategy,
     )
 
-    # 找到该需求的最晚完成时间
-    req_items = [item for item in result.items if item.req_id == task_id]
-    if not req_items:
-        return {
-            "success": True,
-            "task_id": task_id,
-            "target_deadline": target_deadline,
-            "feasible": False,
-            "expected_finish_date": None,
-            "reason": "该需求无法排期",
-            "related_items": [],
-        }
-
-    latest_end = max(item.end_date for item in req_items if item.end_date)
-    feasible = latest_end <= target
-
-    reasons = []
-    if not feasible:
-        reasons.append(f"任务预计完成日期 {latest_end} 晚于目标日期 {target}")
-        # 检查是否受依赖影响
-        req = next((r for r in data.requirements if r.req_id == task_id), None)
-        if req and req.dependencies:
-            dep_items = [item for item in result.items if item.req_id in req.dependencies]
-            if dep_items:
-                dep_latest = max(item.end_date for item in dep_items if item.end_date)
-                if dep_latest and dep_latest >= target:
-                    reasons.append(f"依赖任务最晚完成于 {dep_latest}，影响当前需求")
-
-    # 获取 baseline 中的完成时间
-    baseline_finish = None
+    delay_status = get_requirement_delay_status(simulated_result, req_id)
     baseline = project_context.get_baseline_result()
-    if baseline:
-        baseline_items = [i for i in baseline.items if i.req_id == task_id]
-        if baseline_items:
-            baseline_finish = max(i.end_date for i in baseline_items if i.end_date)
+    baseline_delay = get_requirement_delay_status(baseline, req_id) if baseline else None
 
     return {
         "success": True,
-        "task_id": task_id,
+        "req_id": req_id,
         "target_deadline": target_deadline,
-        "feasible": feasible,
-        "expected_finish_date": str(latest_end),
-        "baseline_finish_date": str(baseline_finish) if baseline_finish else None,
-        "reason": "；".join(reasons) if reasons else "可以按目标日期完成",
-        "related_items": [
-            {
-                "subtask_type": item.subtask_type,
-                "owner": item.owner,
-                "end_date": str(item.end_date) if item.end_date else None,
-            }
-            for item in req_items
-        ],
+        "feasible": not delay_status.get("is_delayed", True),
+        "delay_status": delay_status,
+        "baseline_delay_status": baseline_delay,
+        "message": "可行性分析完成。",
     }
+
+
+@tool
+def check_assignment_feasibility(
+    req_id: str = "",
+    backend_assignee: str = "",
+    frontend_assignee: str = "",
+    test_assignee: str = "",
+    strategy: str = "deadline_first",
+) -> dict:
+    """检查指定人员分配对排期的影响
+
+    Args:
+        req_id: 需求ID
+        backend_assignee: 后端指定人员（为空表示不指定）
+        frontend_assignee: 前端指定人员（为空表示不指定）
+        test_assignee: 测试指定人员（为空表示不指定）
+        strategy: 排期策略
+    """
+    is_valid, error_msg = validate_required_text(req_id, "req_id")
+    if not is_valid:
+        return {"success": False, "message": error_msg}
+
+    is_valid, error_msg = validate_strategy(strategy)
+    if not is_valid:
+        return {"success": False, "message": error_msg}
+
+    if not project_context.has_data():
+        return {
+            "success": False,
+            "message": "当前没有项目数据。"
+        }
+
+    data = project_context.get_data()
+
+    new_requirements = copy.deepcopy(data.requirements)
+    found = False
+    for req in new_requirements:
+        if req.req_id == req_id:
+            if backend_assignee:
+                req.backend_assignee = backend_assignee
+            if frontend_assignee:
+                req.frontend_assignee = frontend_assignee
+            if test_assignee:
+                req.test_assignee = test_assignee
+            found = True
+            break
+
+    if not found:
+        return {
+            "success": False,
+            "message": f"找不到需求 {req_id}",
+        }
+
+    simulated_result = schedule_requirements(
+        new_requirements,
+        copy.deepcopy(data.resources),
+        copy.deepcopy(data.holidays),
+        strategy=strategy,
+    )
+    project_context.set_simulated_result(simulated_result)
+
+    baseline = project_context.get_baseline_result()
+    comparison = compare_schedule_results(baseline, simulated_result, req_id) if baseline else None
+    delay_status = get_requirement_delay_status(simulated_result, req_id)
+
+    return {
+        "success": True,
+        "req_id": req_id,
+        "assignment": {
+            "backend_assignee": backend_assignee,
+            "frontend_assignee": frontend_assignee,
+            "test_assignee": test_assignee,
+        },
+        "delay_status": delay_status,
+        "comparison": comparison,
+        "message": "指定人员分配可行性分析完成。",
+    }
+
+
+@tool
+def simulate_change_tool(
+    change_type: str = "",
+    person: str = "",
+    start_date: str = "",
+    end_date: str = "",
+    strategy: str = "deadline_first",
+) -> dict:
+    """模拟变化并重新排期，与正式排期对比（兼容旧接口）
+
+    Args:
+        change_type: 变化类型，目前只支持 person_vacation
+        person: 人员姓名
+        start_date: 休假开始日期，格式 YYYY-MM-DD
+        end_date: 休假结束日期，格式 YYYY-MM-DD
+        strategy: 排期策略
+    """
+    return check_person_vacation_feasibility.invoke({
+        "person": person,
+        "start_date": start_date,
+        "end_date": end_date,
+        "strategy": strategy,
+    })
+
+
+@tool
+def check_feasibility_tool(task_id: str = "", target_deadline: str = "", strategy: str = "deadline_first") -> dict:
+    """检查某个需求能否提前到指定日期前完成（兼容旧接口）
+
+    Args:
+        task_id: 需求ID
+        target_deadline: 目标日期，格式 YYYY-MM-DD
+        strategy: 排期策略
+    """
+    return check_requirement_deadline_feasibility.invoke({
+        "req_id": task_id,
+        "target_deadline": target_deadline,
+        "strategy": strategy,
+    })
 
 
 @tool

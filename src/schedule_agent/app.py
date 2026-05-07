@@ -95,6 +95,9 @@ if project_context.has_data():
                 "优先级": r.priority,
                 "Deadline": str(r.deadline),
                 "依赖": ",".join(r.dependencies) if r.dependencies else "",
+                "后端指定": r.backend_assignee or "",
+                "前端指定": r.frontend_assignee or "",
+                "测试指定": r.test_assignee or "",
             }
             for r in data.requirements
         ])
@@ -265,6 +268,7 @@ st.markdown("""
 - 为什么正式排期里 REQ-003 延期了？
 - 把本迭代正式排期导出成 Excel
 - 加载已保存的正式排期
+- 把 REQ-001 的后端指定给张三，看看会不会延期？
 """)
 
 user_input = st.text_input("输入你的问题")
