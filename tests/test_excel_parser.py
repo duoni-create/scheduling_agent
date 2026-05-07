@@ -468,9 +468,9 @@ class TestExcelParser:
         assert req2.frontend_assignee == "王五"
         assert req2.test_assignee == ""
 
-    def test_assignee_cross_validation(self, tmp_path):
-        """测试指定人员交叉校验"""
-        path = tmp_path / "assignee_invalid.xlsx"
+    def test_parse_assignee_person_not_exists(self, tmp_path):
+        """指定人员不在资源表"""
+        path = tmp_path / "assignee_not_exist.xlsx"
         req_data = {
             "需求ID": ["REQ-001"],
             "需求名称": ["测试1"],
@@ -500,8 +500,75 @@ class TestExcelParser:
             pd.DataFrame(res_data).to_excel(writer, sheet_name="资源表", index=False)
             pd.DataFrame(hol_data).to_excel(writer, sheet_name="节假日表", index=False)
 
-        # 当前实现没有交叉校验，所以应该能正常解析
-        # 如果未来添加了校验，这里需要更新
-        requirements, resources, holidays = parse_excel(str(path))
-        req1 = requirements[0]
-        assert req1.backend_assignee == "不存在的张三"
+        with pytest.raises(ValueError, match="资源表中不存在该人员"):
+            parse_excel(str(path))
+
+    def test_parse_assignee_role_not_match(self, tmp_path):
+        """指定人员存在但不具备对应角色"""
+        path = tmp_path / "assignee_role_mismatch.xlsx"
+        req_data = {
+            "需求ID": ["REQ-001"],
+            "需求名称": ["测试1"],
+            "前端工时": [1.0],
+            "后端工时": [1.0],
+            "测试工时": [0],
+            "优先级": ["P0"],
+            "Deadline": ["2026-05-20"],
+            "依赖需求": [""],
+            "状态": ["待排期"],
+            "备注": [""],
+            "后端指定人员": ["李四"],
+            "前端指定人员": [""],
+            "测试指定人员": [""],
+        }
+        res_data = {
+            "姓名": ["李四"],
+            "角色": ["前端"],
+            "可用起始日期": ["2026-05-01"],
+            "可用结束日期": ["2026-06-30"],
+            "每日工时": [8],
+            "休假日期": [""],
+        }
+        hol_data = {"日期": ["2026-05-01"], "名称": ["劳动节"], "是否工作日": ["否"]}
+        with pd.ExcelWriter(path, engine="openpyxl") as writer:
+            pd.DataFrame(req_data).to_excel(writer, sheet_name="需求表", index=False)
+            pd.DataFrame(res_data).to_excel(writer, sheet_name="资源表", index=False)
+            pd.DataFrame(hol_data).to_excel(writer, sheet_name="节假日表", index=False)
+
+        with pytest.raises(ValueError, match="不具备后端角色"):
+            parse_excel(str(path))
+
+    def test_parse_assignee_but_no_work_days(self, tmp_path):
+        """后端工时为 0，但填写后端指定人员"""
+        path = tmp_path / "assignee_no_work.xlsx"
+        req_data = {
+            "需求ID": ["REQ-001"],
+            "需求名称": ["测试1"],
+            "前端工时": [1.0],
+            "后端工时": [0],
+            "测试工时": [0],
+            "优先级": ["P0"],
+            "Deadline": ["2026-05-20"],
+            "依赖需求": [""],
+            "状态": ["待排期"],
+            "备注": [""],
+            "后端指定人员": ["张三"],
+            "前端指定人员": [""],
+            "测试指定人员": [""],
+        }
+        res_data = {
+            "姓名": ["张三"],
+            "角色": ["后端"],
+            "可用起始日期": ["2026-05-01"],
+            "可用结束日期": ["2026-06-30"],
+            "每日工时": [8],
+            "休假日期": [""],
+        }
+        hol_data = {"日期": ["2026-05-01"], "名称": ["劳动节"], "是否工作日": ["否"]}
+        with pd.ExcelWriter(path, engine="openpyxl") as writer:
+            pd.DataFrame(req_data).to_excel(writer, sheet_name="需求表", index=False)
+            pd.DataFrame(res_data).to_excel(writer, sheet_name="资源表", index=False)
+            pd.DataFrame(hol_data).to_excel(writer, sheet_name="节假日表", index=False)
+
+        with pytest.raises(ValueError, match="后端工时为 0，但填写了后端指定人员"):
+            parse_excel(str(path))

@@ -9,8 +9,6 @@ from .agent_tools import (
     run_schedule_tool,
     set_baseline_schedule_tool,
     load_baseline_schedule_tool,
-    simulate_change_tool,
-    check_feasibility_tool,
     explain_delay_tool,
     compare_with_baseline_tool,
     export_schedule_tool,
@@ -78,10 +76,15 @@ SYSTEM_PROMPT = """你是一个两周迭代排期助手 Agent。
 
 参数完整性规范：
 - 当用户要求模拟人员请假时，必须同时具备：人员姓名、请假开始日期、请假结束日期。
-  如果用户没有提供具体日期范围，不要调用 simulate_change_tool，应先追问用户补充具体请假时间。
+  如果用户没有提供具体日期范围，不要调用 check_person_vacation_feasibility，应先追问用户补充具体请假时间。
   不要自行猜测"下周""过几天"等模糊日期。
 - 当用户要求检查某需求能否提前完成时，必须同时具备：需求ID、目标日期。
   如果缺少任一信息，应先追问。
+- 当用户说"让某人负责某需求"时，必须具备：
+  1. 需求ID
+  2. 角色：前端 / 后端 / 测试
+  3. 人员姓名
+  缺少任一信息时，先追问，不要调用 check_assignment_feasibility。
 - 当用户要求导出时，如果未指定格式，默认使用 excel。"""
 
 
@@ -105,14 +108,12 @@ def create_schedule_agent():
         run_schedule_tool,
         set_baseline_schedule_tool,
         load_baseline_schedule_tool,
-        simulate_change_tool,
-        check_feasibility_tool,
-        explain_delay_tool,
-        compare_with_baseline_tool,
-        export_schedule_tool,
         check_person_vacation_feasibility,
         check_requirement_deadline_feasibility,
         check_assignment_feasibility,
+        explain_delay_tool,
+        compare_with_baseline_tool,
+        export_schedule_tool,
     ]
 
     agent = create_agent(

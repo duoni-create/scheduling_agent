@@ -283,6 +283,10 @@ class TestAgentTools:
 
     def test_check_requirement_deadline_feasibility(self, sample_data):
         """测试需求 deadline 可行性分析"""
+        # 先设置 baseline
+        run_schedule_tool.invoke({"strategy": "deadline_first"})
+        set_baseline_schedule_tool.invoke({"iteration_name": "测试迭代"})
+
         result = check_requirement_deadline_feasibility.invoke({
             "req_id": "REQ-001",
             "target_deadline": "2026-05-15",
@@ -293,30 +297,108 @@ class TestAgentTools:
         assert "delay_status" in result
         assert result["req_id"] == "REQ-001"
 
-    def test_check_assignment_feasibility(self, sample_data):
-        """测试指定人员分配可行性分析"""
+    def test_check_requirement_deadline_feasibility_sets_simulated_result(self, sample_data):
+        """需求提前可行性分析后，simulated_result 不为空"""
+        # 先设置 baseline
+        run_schedule_tool.invoke({"strategy": "deadline_first"})
+        set_baseline_schedule_tool.invoke({"iteration_name": "测试迭代"})
+
+        check_requirement_deadline_feasibility.invoke({
+            "req_id": "REQ-001",
+            "target_deadline": "2026-05-15",
+            "strategy": "deadline_first",
+        })
+
+        assert project_context.get_simulated_result() is not None
+
+    def test_check_assignment_feasibility_success(self, sample_data):
+        """测试指定人员分配可行性分析成功"""
         # 先设置 baseline
         run_schedule_tool.invoke({"strategy": "deadline_first"})
         set_baseline_schedule_tool.invoke({"iteration_name": "测试迭代"})
 
         result = check_assignment_feasibility.invoke({
-            "req_id": "REQ-001",
-            "frontend_assignee": "张三",
+            "task_id": "REQ-001",
+            "role": "前端",
+            "person": "张三",
             "strategy": "deadline_first",
         })
 
         assert result["success"] is True
-        assert result["req_id"] == "REQ-001"
-        assert result["assignment"]["frontend_assignee"] == "张三"
-        assert "delay_status" in result
+        assert result["task_id"] == "REQ-001"
+        assert result["role"] == "前端"
+        assert result["person"] == "张三"
+        assert "comparison" in result
+        assert project_context.get_simulated_result() is not None
 
-    def test_check_assignment_feasibility_invalid_person(self, sample_data):
-        """测试指定不存在的人员"""
+    def test_check_assignment_feasibility_missing_baseline(self, sample_data):
+        """没有 baseline 时返回 success=false"""
         result = check_assignment_feasibility.invoke({
-            "req_id": "REQ-001",
-            "backend_assignee": "不存在的人",
+            "task_id": "REQ-001",
+            "role": "前端",
+            "person": "张三",
             "strategy": "deadline_first",
         })
 
-        assert result["success"] is True  # 工具本身成功
-        assert result["delay_status"]["unscheduled_subtasks"] > 0
+        assert result["success"] is False
+        assert "正式排期" in result["message"]
+
+    def test_check_assignment_feasibility_invalid_role(self, sample_data):
+        """role 非法时返回 success=false"""
+        # 先设置 baseline
+        run_schedule_tool.invoke({"strategy": "deadline_first"})
+        set_baseline_schedule_tool.invoke({"iteration_name": "测试迭代"})
+
+        result = check_assignment_feasibility.invoke({
+            "task_id": "REQ-001",
+            "role": "设计",
+            "person": "张三",
+            "strategy": "deadline_first",
+        })
+
+        assert result["success"] is False
+        assert "角色" in result["message"]
+
+    def test_check_assignment_feasibility_person_not_found(self, sample_data):
+        """person 不存在时返回 success=false"""
+        # 先设置 baseline
+        run_schedule_tool.invoke({"strategy": "deadline_first"})
+        set_baseline_schedule_tool.invoke({"iteration_name": "测试迭代"})
+
+        result = check_assignment_feasibility.invoke({
+            "task_id": "REQ-001",
+            "role": "前端",
+            "person": "不存在的人",
+            "strategy": "deadline_first",
+        })
+
+        assert result["success"] is False
+        assert "不在资源表中" in result["message"]
+
+    def test_check_assignment_feasibility_role_not_match(self, sample_data):
+        """person 存在但不具备 role 时返回 success=false"""
+        # 先设置 baseline
+        run_schedule_tool.invoke({"strategy": "deadline_first"})
+        set_baseline_schedule_tool.invoke({"iteration_name": "测试迭代"})
+
+        result = check_assignment_feasibility.invoke({
+            "task_id": "REQ-001",
+            "role": "后端",
+            "person": "张三",
+            "strategy": "deadline_first",
+        })
+
+        assert result["success"] is False
+        assert "不具备" in result["message"]
+
+    def test_simulate_change_tool_invalid_change_type(self, sample_data):
+        """旧接口 change_type 不是 person_vacation 时，返回 success=false"""
+        result = simulate_change_tool.invoke({
+            "change_type": "invalid_type",
+            "person": "张三",
+            "start_date": "2026-05-11",
+            "end_date": "2026-05-15",
+        })
+
+        assert result["success"] is False
+        assert "person_vacation" in result["message"]

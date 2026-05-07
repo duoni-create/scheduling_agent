@@ -208,6 +208,34 @@ def parse_excel(file_path: str):
     # 人员姓名重复校验
     validate_unique_values(resource_names, "姓名")
 
+    # ===== 指定人员跨表校验 =====
+    resource_map = {res.name: res for res in resources}
+
+    for req in requirements:
+        if req.backend_assignee:
+            if req.backend_days <= 0:
+                raise ValueError(f"需求 {req.req_id} 后端工时为 0，但填写了后端指定人员 {req.backend_assignee}")
+            if req.backend_assignee not in resource_map:
+                raise ValueError(f"需求 {req.req_id} 指定 {req.backend_assignee} 负责后端，但资源表中不存在该人员")
+            if "后端" not in resource_map[req.backend_assignee].roles:
+                raise ValueError(f"需求 {req.req_id} 指定 {req.backend_assignee} 负责后端，但该人员不具备后端角色")
+
+        if req.frontend_assignee:
+            if req.frontend_days <= 0:
+                raise ValueError(f"需求 {req.req_id} 前端工时为 0，但填写了前端指定人员 {req.frontend_assignee}")
+            if req.frontend_assignee not in resource_map:
+                raise ValueError(f"需求 {req.req_id} 指定 {req.frontend_assignee} 负责前端，但资源表中不存在该人员")
+            if "前端" not in resource_map[req.frontend_assignee].roles:
+                raise ValueError(f"需求 {req.req_id} 指定 {req.frontend_assignee} 负责前端，但该人员不具备前端角色")
+
+        if req.test_assignee:
+            if req.test_days <= 0:
+                raise ValueError(f"需求 {req.req_id} 测试工时为 0，但填写了测试指定人员 {req.test_assignee}")
+            if req.test_assignee not in resource_map:
+                raise ValueError(f"需求 {req.req_id} 指定 {req.test_assignee} 负责测试，但资源表中不存在该人员")
+            if "测试" not in resource_map[req.test_assignee].roles:
+                raise ValueError(f"需求 {req.req_id} 指定 {req.test_assignee} 负责测试，但该人员不具备测试角色")
+
     # ===== 节假日表 =====
     df_hol = pd.read_excel(file_path, sheet_name="节假日表")
     validate_required_columns(df_hol, [

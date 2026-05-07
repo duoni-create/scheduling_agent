@@ -375,7 +375,14 @@ def check_requirement_deadline_feasibility(
             "message": "当前没有项目数据。"
         }
 
+    if not project_context.has_baseline():
+        return {
+            "success": False,
+            "message": "当前还没有正式排期，请先生成排期并设为本迭代正式排期。",
+        }
+
     data = project_context.get_data()
+    baseline_result = project_context.get_baseline_result()
 
     try:
         target = parse_yyyy_mm_dd(target_deadline, "target_deadline")
@@ -402,42 +409,76 @@ def check_requirement_deadline_feasibility(
         copy.deepcopy(data.holidays),
         strategy=strategy,
     )
+    project_context.set_simulated_result(simulated_result)
+
+    comparison = compare_schedule_results(baseline_result, simulated_result, req_id)
 
     delay_status = get_requirement_delay_status(simulated_result, req_id)
-    baseline = project_context.get_baseline_result()
-    baseline_delay = get_requirement_delay_status(baseline, req_id) if baseline else None
+    baseline_delay = get_requirement_delay_status(baseline_result, req_id)
+
+    feasible = not delay_status.get("is_delayed", True)
+
+    # 计算预期完成日期
+    req_items = [item for item in simulated_result.items if item.req_id == req_id]
+    expected_finish = max((item.end_date for item in req_items if item.end_date), default=None)
+    baseline_items = [item for item in baseline_result.items if item.req_id == req_id]
+    baseline_finish = max((item.end_date for item in baseline_items if item.end_date), default=None)
+
+    # has_impact 判断
+    has_impact = comparison.get("worsened_count", 0) > 0 or comparison.get("improved_count", 0) > 0
+
+    message = "需求提前可行性分析完成。"
+    if feasible and has_impact:
+        message += "可行但可能影响其他需求。"
+    elif not feasible:
+        message += "不可行，目标需求无法在指定日期前完成。"
 
     return {
         "success": True,
         "req_id": req_id,
         "target_deadline": target_deadline,
-        "feasible": not delay_status.get("is_delayed", True),
+        "feasible": feasible,
+        "has_impact": has_impact,
+        "baseline_summary": baseline_result.summary,
+        "simulated_summary": simulated_result.summary,
+        "comparison": comparison,
+        "baseline_finish_date": str(baseline_finish) if baseline_finish else None,
+        "expected_finish_date": str(expected_finish) if expected_finish else None,
         "delay_status": delay_status,
         "baseline_delay_status": baseline_delay,
-        "message": "可行性分析完成。",
+        "message": message,
     }
 
 
 @tool
 def check_assignment_feasibility(
-    req_id: str = "",
-    backend_assignee: str = "",
-    frontend_assignee: str = "",
-    test_assignee: str = "",
+    task_id: str = "",
+    role: str = "",
+    person: str = "",
     strategy: str = "deadline_first",
 ) -> dict:
     """检查指定人员分配对排期的影响
 
     Args:
-        req_id: 需求ID
-        backend_assignee: 后端指定人员（为空表示不指定）
-        frontend_assignee: 前端指定人员（为空表示不指定）
-        test_assignee: 测试指定人员（为空表示不指定）
+        task_id: 需求ID
+        role: 角色，只能是 前端 / 后端 / 测试
+        person: 指定人员姓名
         strategy: 排期策略
     """
-    is_valid, error_msg = validate_required_text(req_id, "req_id")
+    is_valid, error_msg = validate_required_text(task_id, "task_id")
     if not is_valid:
         return {"success": False, "message": error_msg}
+
+    is_valid, error_msg = validate_required_text(role, "role")
+    if not is_valid:
+        return {"success": False, "message": "角色 role 不能为空"}
+
+    if role not in ("前端", "后端", "测试"):
+        return {"success": False, "message": f"角色 role 必须是 前端/后端/测试，当前值: {role}"}
+
+    is_valid, error_msg = validate_required_text(person, "person")
+    if not is_valid:
+        return {"success": False, "message": "人员姓名 person 不能为空"}
 
     is_valid, error_msg = validate_strategy(strategy)
     if not is_valid:
@@ -446,29 +487,68 @@ def check_assignment_feasibility(
     if not project_context.has_data():
         return {
             "success": False,
-            "message": "当前没有项目数据。"
+            "message": "当前没有项目数据，请先上传 Excel。"
+        }
+
+    if not project_context.has_baseline():
+        return {
+            "success": False,
+            "message": "当前还没有正式排期，请先生成排期并设为本迭代正式排期。",
         }
 
     data = project_context.get_data()
+    baseline_result = project_context.get_baseline_result()
 
-    new_requirements = copy.deepcopy(data.requirements)
-    found = False
-    for req in new_requirements:
-        if req.req_id == req_id:
-            if backend_assignee:
-                req.backend_assignee = backend_assignee
-            if frontend_assignee:
-                req.frontend_assignee = frontend_assignee
-            if test_assignee:
-                req.test_assignee = test_assignee
-            found = True
+    # 校验 task_id 对应需求存在
+    target_req = None
+    for req in data.requirements:
+        if req.req_id == task_id:
+            target_req = req
             break
 
-    if not found:
+    if not target_req:
         return {
             "success": False,
-            "message": f"找不到需求 {req_id}",
+            "message": f"找不到需求 {task_id}",
         }
+
+    # 校验该需求对应 role 的工时 > 0
+    role_days_map = {
+        "后端": target_req.backend_days,
+        "前端": target_req.frontend_days,
+        "测试": target_req.test_days,
+    }
+    if role_days_map[role] <= 0:
+        return {
+            "success": False,
+            "message": f"需求 {task_id} 的 {role} 工时为 0，无法指定 {role} 人员",
+        }
+
+    # 校验 person 在资源表中存在
+    resource_map = {res.name: res for res in data.resources}
+    if person not in resource_map:
+        return {
+            "success": False,
+            "message": f"人员 {person} 不在资源表中",
+        }
+
+    # 校验 person 具备对应 role
+    if role not in resource_map[person].roles:
+        return {
+            "success": False,
+            "message": f"人员 {person} 不具备 {role} 角色",
+        }
+
+    new_requirements = copy.deepcopy(data.requirements)
+    for req in new_requirements:
+        if req.req_id == task_id:
+            if role == "后端":
+                req.backend_assignee = person
+            elif role == "前端":
+                req.frontend_assignee = person
+            elif role == "测试":
+                req.test_assignee = person
+            break
 
     simulated_result = schedule_requirements(
         new_requirements,
@@ -478,21 +558,34 @@ def check_assignment_feasibility(
     )
     project_context.set_simulated_result(simulated_result)
 
-    baseline = project_context.get_baseline_result()
-    comparison = compare_schedule_results(baseline, simulated_result, req_id) if baseline else None
-    delay_status = get_requirement_delay_status(simulated_result, req_id)
+    comparison = compare_schedule_results(baseline_result, simulated_result, task_id)
+
+    # feasible 判断：如果目标需求出现无法排期，则 false
+    req_items = [item for item in simulated_result.items + simulated_result.unscheduled_items if item.req_id == task_id]
+    has_unscheduled = any(item.status == "无法排期" for item in req_items)
+    feasible = not has_unscheduled
+
+    # has_impact 判断：如果有变动，则为 true
+    has_impact = comparison.get("worsened_count", 0) > 0 or comparison.get("improved_count", 0) > 0
+
+    message = "指定人员可行性分析完成。"
+    if feasible and has_impact:
+        message += "可行但存在延期风险。"
+    elif not feasible:
+        message += "不可行，目标需求出现无法排期。"
 
     return {
         "success": True,
-        "req_id": req_id,
-        "assignment": {
-            "backend_assignee": backend_assignee,
-            "frontend_assignee": frontend_assignee,
-            "test_assignee": test_assignee,
-        },
-        "delay_status": delay_status,
+        "analysis_type": "assignment",
+        "task_id": task_id,
+        "role": role,
+        "person": person,
+        "feasible": feasible,
+        "has_impact": has_impact,
+        "baseline_summary": baseline_result.summary,
+        "simulated_summary": simulated_result.summary,
         "comparison": comparison,
-        "message": "指定人员分配可行性分析完成。",
+        "message": message,
     }
 
 
@@ -513,6 +606,12 @@ def simulate_change_tool(
         end_date: 休假结束日期，格式 YYYY-MM-DD
         strategy: 排期策略
     """
+    if change_type != "person_vacation":
+        return {
+            "success": False,
+            "message": f"当前只支持人员休假模拟 person_vacation，不支持 {change_type}"
+        }
+
     return check_person_vacation_feasibility.invoke({
         "person": person,
         "start_date": start_date,
