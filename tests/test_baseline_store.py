@@ -1,15 +1,21 @@
 import os
 import pytest
 from datetime import date
-from schedule_agent.models import Requirement, Resource, Holiday, ScheduleResult, ScheduleItem
+from schedule_agent.models import Requirement, Resource, Holiday, ScheduleResult, ScheduleItem, ProjectData
 from schedule_agent.baseline_store import save_baseline, load_baseline, clear_baseline
+from schedule_agent.sqlite_store import get_db_path
 
 
 class TestBaselineStore:
     @pytest.fixture(autouse=True)
     def cleanup(self):
         yield
-        clear_baseline("data/baseline/test_baseline.json")
+        db_path = get_db_path()
+        if os.path.exists(db_path):
+            try:
+                os.remove(db_path)
+            except PermissionError:
+                pass
 
     def test_save_and_load_baseline(self):
         requirements = [
@@ -25,7 +31,6 @@ class TestBaselineStore:
             Holiday(date=date(2026, 5, 1), name="劳动节", is_workday=False),
         ]
 
-        from schedule_agent.models import ProjectData
         project_data = ProjectData(
             requirements=requirements,
             resources=resources,
@@ -62,10 +67,10 @@ class TestBaselineStore:
             "strategy": "deadline_first",
         }
 
-        path = save_baseline(project_data, baseline_result, baseline_meta, "data/baseline/test_baseline.json")
-        assert os.path.exists(path)
+        path = save_baseline(project_data, baseline_result, baseline_meta)
+        assert "sqlite://" in path
 
-        loaded = load_baseline("data/baseline/test_baseline.json")
+        loaded = load_baseline()
         assert loaded is not None
 
         loaded_project_data, loaded_baseline_result, loaded_meta = loaded
@@ -75,7 +80,9 @@ class TestBaselineStore:
         assert loaded_baseline_result.items[0].req_id == "REQ-001"
 
     def test_load_nonexistent_baseline(self):
-        loaded = load_baseline("data/baseline/nonexistent.json")
+        # 先确保没有 baseline
+        clear_baseline()
+        loaded = load_baseline()
         assert loaded is None
 
     def test_clear_baseline(self):
@@ -90,7 +97,6 @@ class TestBaselineStore:
         ]
         holidays = []
 
-        from schedule_agent.models import ProjectData
         project_data = ProjectData(
             requirements=requirements,
             resources=resources,
@@ -105,8 +111,11 @@ class TestBaselineStore:
             strategy="deadline_first",
         )
 
-        path = save_baseline(project_data, baseline_result, {}, "data/baseline/test_baseline.json")
-        assert os.path.exists(path)
+        save_baseline(project_data, baseline_result, {})
+        db_path = get_db_path()
+        assert os.path.exists(db_path)
 
-        clear_baseline("data/baseline/test_baseline.json")
-        assert not os.path.exists(path)
+        clear_baseline()
+        # SQLite clear 删除表内数据，不删除文件本身
+        loaded = load_baseline()
+        assert loaded is None

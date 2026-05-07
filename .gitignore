@@ -43,5 +43,13 @@ Thumbs.db
 # Data exports
 data/exports/*.xlsx
 
+# SQLite local database
+data/*.db
+data/*.sqlite
+data/*.sqlite3
+
+# Old baseline JSON
+data/baseline/*.json
+
 # pytest
 .pytest_cache/

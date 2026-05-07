@@ -36,6 +36,18 @@ with st.sidebar:
         st.success("数据已重置")
         st.rerun()
 
+    st.divider()
+    st.header("SQLite")
+    from schedule_agent.sqlite_store import get_db_path, clear_current_baseline
+    db_path = get_db_path()
+    st.text(f"存储路径: {db_path}")
+
+    confirm_clear = st.checkbox("我确认要删除 SQLite 中的正式排期")
+    if confirm_clear and st.button("清空已保存的正式排期"):
+        clear_current_baseline()
+        st.success("已清空 SQLite 中的正式排期")
+        st.rerun()
+
 # 数据区
 st.header("1. 数据上传")
 uploaded_file = st.file_uploader("上传排期 Excel", type=["xlsx"])
@@ -141,7 +153,7 @@ if project_context.has_data():
                 data = project_context.get_data()
                 baseline = project_context.get_baseline_result()
                 save_baseline(data, baseline, project_context.baseline_meta)
-                st.success("已设为本迭代正式排期并保存")
+                st.success("已设为本迭代正式排期，并保存到 SQLite")
             else:
                 st.error(confirm_result["message"])
             st.rerun()
@@ -155,9 +167,9 @@ if project_context.has_data():
             project_context.project_data = project_data
             project_context.baseline_result = baseline_result
             project_context.baseline_meta = baseline_meta
-            st.success("已加载正式排期")
+            st.success("已从 SQLite 加载正式排期")
         else:
-            st.error("没有找到已保存的正式排期")
+            st.error("SQLite 中没有找到已保存的正式排期")
         st.rerun()
 
     if project_context.has_baseline():

@@ -15,7 +15,7 @@
 **项目特点**：
 
 - 不保存用户聊天记录，只保存一版正式排期 baseline。
-- 使用本地 JSON 持久化当前 baseline，不接数据库。
+- 使用 SQLite 持久化当前 baseline 的输入数据和排期结果。
 - 排期计算由确定性引擎完成，Agent 只负责理解意图和选择工具。
 
 ## 技术栈
@@ -39,8 +39,7 @@ schedule-agent/
 ├── .gitignore
 ├── data/
 │   ├── sample_schedule.xlsx
-│   ├── baseline/
-│   │   └── current_baseline.json
+│   ├── scheduling_agent.db
 │   └── exports/
 ├── src/
 │   └── schedule_agent/
@@ -48,7 +47,8 @@ schedule-agent/
 │       ├── app.py              # Streamlit 页面
 │       ├── models.py           # Pydantic 数据模型
 │       ├── project_context.py  # 项目上下文（baseline/draft/simulated 状态管理）
-│       ├── baseline_store.py   # 本地 JSON 持久化 baseline
+│       ├── sqlite_store.py     # SQLite 持久化实现
+│       ├── baseline_store.py   # baseline 持久化兼容层，底层使用 SQLite
 │       ├── sample_generator.py # 示例数据生成
 │       ├── excel_parser.py     # Excel 解析
 │       ├── calendar_service.py # 日历服务
@@ -63,7 +63,8 @@ schedule-agent/
     ├── test_schedule_engine.py
     ├── test_agent_tools.py
     ├── test_agent_runner.py
-    └── test_baseline_store.py
+    ├── test_baseline_store.py
+    └── test_sqlite_store.py
 ```
 
 ## 安装依赖
@@ -138,7 +139,7 @@ uv run pytest
 确认 draft 无误后，点击"设为本迭代正式排期"：
 
 - 将 draft 提升为 baseline。
-- 保存到 `data/baseline/current_baseline.json`。
+- 保存到 SQLite（`data/scheduling_agent.db`）。
 - 记录迭代名称和确认时间。
 
 ### 4. 迭代期间模拟
@@ -156,7 +157,7 @@ uv run pytest
 ## 第一版限制
 
 1. 只支持本地单用户使用。
-2. 数据暂存在内存中，仅 baseline 持久化到本地 JSON。
+2. 数据暂存在内存中，仅 baseline 持久化到 SQLite。
 3. 只保存一版 current_baseline，不支持多迭代历史版本。
 4. 不保存用户会话记录和聊天记录。
 5. 不支持多人同时在线编辑。
@@ -169,10 +170,26 @@ uv run pytest
 12. 暂不支持复杂审批流。
 13. Agent 可以自主选择工具，但不能直接生成排期结果。
 
+## SQLite 数据落地说明
+
+SQLite 中保存：
+- iterations（迭代元信息）
+- requirements（需求数据）
+- resources（人员资源）
+- holidays（节假日/调休）
+- schedule_runs（排期结果头）
+- schedule_items（排期明细，含 used_slots）
+
+SQLite 中不保存：
+- 用户会话记录
+- Agent 聊天记录
+- 临时 draft 排期
+- 模拟 simulated 排期
+
 ## 后续优化方向
 
-- 支持数据库存储（替换 baseline_store.py）
 - 支持多迭代历史版本管理
+- 支持多人协作
 - 支持多人协作
 - 支持甘特图可视化
 - 支持更多模拟变化类型

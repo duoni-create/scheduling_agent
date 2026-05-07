@@ -6,6 +6,7 @@ from .schedule_engine import schedule_requirements
 from .conflict_checker import check_conflicts
 from .export_service import export_schedule_to_excel
 from .baseline_store import save_baseline, load_baseline
+from .sqlite_store import get_db_path
 from .models import Requirement, Resource, Holiday, ScheduleResult
 
 
@@ -192,8 +193,9 @@ def set_baseline_schedule_tool(
 
     return {
         "success": True,
-        "message": "已设为本迭代正式排期",
-        "file_path": filepath,
+        "message": "已设为本迭代正式排期，并保存到 SQLite",
+        "storage": "sqlite",
+        "db_path": get_db_path(),
         "baseline_meta": project_context.baseline_meta,
         "baseline_summary": baseline.summary,
     }
@@ -216,7 +218,9 @@ def load_baseline_schedule_tool() -> dict:
 
     return {
         "success": True,
-        "message": "已加载正式排期",
+        "message": "已从 SQLite 加载正式排期",
+        "storage": "sqlite",
+        "db_path": get_db_path(),
         "baseline_meta": baseline_meta,
         "baseline_summary": baseline_result.summary,
     }
@@ -610,9 +614,15 @@ def compare_with_baseline_tool(compare_target: str = "simulated") -> dict:
             })
 
     # 新增无法排期任务
-    baseline_unscheduled = {(i.req_id, i.subtask_type) for i in baseline.unscheduled_items}
-    target_unscheduled = {(i.req_id, i.subtask_type) for i in target.unscheduled_items}
-    newly_unscheduled = target_unscheduled - baseline_unscheduled
+    baseline_unscheduled_ids = {(i.req_id, i.subtask_type) for i in baseline.unscheduled_items}
+    target_unscheduled = [(i.req_id, i.subtask_type) for i in target.unscheduled_items]
+    newly_unscheduled = []
+    for req_id, subtask_type in target_unscheduled:
+        if (req_id, subtask_type) not in baseline_unscheduled_ids:
+            newly_unscheduled.append({
+                "req_id": req_id,
+                "subtask_type": subtask_type,
+            })
 
     return {
         "success": True,
@@ -620,7 +630,7 @@ def compare_with_baseline_tool(compare_target: str = "simulated") -> dict:
         "target_summary": target.summary,
         "target_name": target_name,
         "affected_items": affected,
-        "newly_unscheduled": list(newly_unscheduled),
+        "newly_unscheduled": newly_unscheduled,
         "message": f"已完成 {target_name} 与正式排期的对比。",
     }
 
