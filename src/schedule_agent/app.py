@@ -1,13 +1,14 @@
 import os
+import pandas as pd
 import streamlit as st
-from .excel_parser import parse_excel
-from .sample_generator import generate_sample_excel
-from .schedule_engine import schedule_requirements
-from .conflict_checker import check_conflicts
-from .project_context import project_context
-from .export_service import export_schedule_to_excel
-from .agent_runner import run_agent
-from .result_formatter import (
+from schedule_agent.excel_parser import parse_excel
+from schedule_agent.sample_generator import generate_sample_excel
+from schedule_agent.schedule_engine import schedule_requirements
+from schedule_agent.conflict_checker import check_conflicts
+from schedule_agent.project_context import project_context
+from schedule_agent.export_service import export_schedule_to_excel
+from schedule_agent.agent_runner import run_agent
+from schedule_agent.result_formatter import (
     format_schedule_result_for_table,
     format_summary_text,
     format_delayed_items,
@@ -182,5 +183,3 @@ if st.button("发送给 Agent") and user_input:
     with st.spinner("Agent 思考中..."):
         response = run_agent(user_input)
         st.markdown(f"**Agent:** {response}")
-
-import pandas as pd
