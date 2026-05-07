@@ -32,7 +32,10 @@ def _safe_int(value, row_info, field_name):
     if value is None or (isinstance(value, float) and str(value) == 'nan'):
         raise ValueError(f"{row_info}【{field_name}】不能为空，必须是整数。")
     try:
-        return int(value)
+        float_value = float(value)
+        if not float_value.is_integer():
+            raise ValueError(f"{row_info}【{field_name}】必须是整数。")
+        return int(float_value)
     except (ValueError, TypeError):
         raise ValueError(f"{row_info}【{field_name}】必须是整数。")
 

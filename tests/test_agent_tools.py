@@ -218,3 +218,45 @@ class TestAgentTools:
         result = export_schedule_tool.invoke({"target": "draft", "format": "pdf"})
         assert result["success"] is False
         assert "不支持的导出格式" in result["message"]
+
+    def test_simulate_change_missing_start_date(self, sample_data):
+        run_schedule_tool.invoke({"strategy": "deadline_first"})
+        set_baseline_schedule_tool.invoke({"iteration_name": "测试", "note": ""})
+        result = simulate_change_tool.invoke({
+            "change_type": "person_vacation",
+            "person": "张三",
+            "start_date": "",
+            "end_date": "2026-05-15",
+            "strategy": "deadline_first",
+        })
+        assert result["success"] is False
+        assert "开始日期" in result["message"] or "不能为空" in result["message"]
+
+    def test_check_feasibility_missing_target_deadline(self, sample_data):
+        run_schedule_tool.invoke({"strategy": "deadline_first"})
+        result = check_feasibility_tool.invoke({
+            "task_id": "REQ-003",
+            "target_deadline": "",
+            "strategy": "deadline_first",
+        })
+        assert result["success"] is False
+        assert "target_deadline" in result["message"] or "不能为空" in result["message"]
+
+    def test_validate_schedule_data_detects_cycle(self, sample_data):
+        # 修改 project_data 制造循环依赖
+        from schedule_agent.project_context import project_context
+        data = project_context.get_data()
+        # 先备份原始依赖
+        original_deps = {r.req_id: list(r.dependencies) for r in data.requirements}
+        # 制造循环：REQ-001 依赖 REQ-002，REQ-002 依赖 REQ-001
+        for req in data.requirements:
+            if req.req_id == "REQ-001":
+                req.dependencies = ["REQ-002"]
+            elif req.req_id == "REQ-002":
+                req.dependencies = ["REQ-001"]
+        result = validate_schedule_data_tool.invoke({})
+        # 恢复原始依赖
+        for req in data.requirements:
+            req.dependencies = original_deps.get(req.req_id, [])
+        assert result["valid"] is False
+        assert any("循环依赖" in e for e in result["errors"])

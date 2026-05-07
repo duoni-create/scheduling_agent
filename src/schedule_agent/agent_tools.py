@@ -13,6 +13,7 @@ from .validation import (
     validate_required_text,
     parse_yyyy_mm_dd,
     validate_date_range,
+    validate_no_cycle,
 )
 
 
@@ -75,6 +76,11 @@ def validate_schedule_data_tool() -> dict:
         errors.append("没有资源数据")
 
     # 检查循环依赖
+    try:
+        validate_no_cycle(data.requirements)
+    except ValueError as e:
+        errors.append(str(e))
+
     req_map = {r.req_id: r for r in data.requirements}
     for req in data.requirements:
         for dep in req.dependencies:
@@ -242,10 +248,10 @@ def load_baseline_schedule_tool() -> dict:
 
 @tool
 def simulate_change_tool(
-    change_type: str,
-    person: str,
-    start_date: str,
-    end_date: str,
+    change_type: str = "",
+    person: str = "",
+    start_date: str = "",
+    end_date: str = "",
     strategy: str = "deadline_first",
 ) -> dict:
     """模拟变化并重新排期，与正式排期对比
@@ -383,7 +389,7 @@ def simulate_change_tool(
 
 
 @tool
-def check_feasibility_tool(task_id: str, target_deadline: str, strategy: str = "deadline_first") -> dict:
+def check_feasibility_tool(task_id: str = "", target_deadline: str = "", strategy: str = "deadline_first") -> dict:
     """检查某个需求能否提前到指定日期前完成
 
     Args:

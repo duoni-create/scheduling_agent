@@ -143,15 +143,19 @@ if project_context.has_data():
     if st.button("开始排期", type="primary"):
         with st.spinner("排期中..."):
             data = project_context.get_data()
-            result = schedule_requirements(
-                data.requirements,
-                data.resources,
-                data.holidays,
-                strategy=strategy,
-            )
-            project_context.set_draft_result(result)
-            st.success("临时排期已生成")
-            st.rerun()
+            try:
+                result = schedule_requirements(
+                    data.requirements,
+                    data.resources,
+                    data.holidays,
+                    strategy=strategy,
+                )
+                project_context.set_draft_result(result)
+                st.success("临时排期已生成")
+                st.rerun()
+            except Exception as e:
+                st.error("排期失败")
+                st.code(str(e))
 
 # 正式排期区
 st.header("3. 本迭代正式排期")

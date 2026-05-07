@@ -18,11 +18,12 @@ def parse_date_safe(value, field_name: str, row_index: Optional[int] = None) -> 
         return None
 
     try:
-        if isinstance(value, date):
-            return value
         from datetime import datetime
+        # 先判断 datetime，再判断 date（因为 datetime 是 date 的子类）
         if isinstance(value, datetime):
             return value.date()
+        if isinstance(value, date):
+            return value
         # 处理 pandas Timestamp
         if hasattr(value, "date"):
             return value.date()
