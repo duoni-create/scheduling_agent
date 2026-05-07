@@ -77,6 +77,17 @@ class TestAgentTools:
         assert result["success"] is False
         assert "先运行排期" in result["message"]
 
+    def test_simulate_change_invalid_type(self, sample_data):
+        result = simulate_change_tool.invoke({
+            "change_type": "invalid_type",
+            "person": "张三",
+            "start_date": "2026-05-11",
+            "end_date": "2026-05-15",
+            "strategy": "deadline_first",
+        })
+        assert result["success"] is False
+        assert "只支持人员休假模拟" in result["message"]
+
     def test_compare_schedule_tool(self, sample_data):
         result = compare_schedule_tool.invoke({
             "strategy_a": "deadline_first",

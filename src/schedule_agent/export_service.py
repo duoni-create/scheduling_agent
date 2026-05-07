@@ -18,6 +18,11 @@ def export_schedule_to_excel(
     # 排期结果 Sheet
     result_data = []
     for item in schedule_result.items:
+        slots_str = ""
+        if item.used_slots:
+            slots_str = ", ".join(
+                f"{slot['date']} {slot['half']}" for slot in item.used_slots
+            )
         result_data.append({
             "需求ID": item.req_id,
             "需求名称": item.req_name,
@@ -33,6 +38,7 @@ def export_schedule_to_excel(
             "延期天数": item.delay_days,
             "状态": item.status,
             "原因": item.reason,
+            "实际占用槽位": slots_str,
         })
 
     for item in schedule_result.unscheduled_items:

@@ -231,6 +231,12 @@ def schedule_requirements(
                 delayed = end_date_val > req.deadline
                 delay_days = (end_date_val - req.deadline).days if delayed else 0
 
+                # 转换 used_slots 为 dict 列表
+                used_slots_dict = [
+                    {"date": str(slot_day), "half": slot_half}
+                    for slot_day, slot_half in used_slots
+                ]
+
                 item = ScheduleItem(
                     req_id=req.req_id,
                     req_name=req.name,
@@ -245,6 +251,7 @@ def schedule_requirements(
                     delayed=delayed,
                     delay_days=delay_days,
                     status="已排期",
+                    used_slots=used_slots_dict,
                 )
                 items.append(item)
 

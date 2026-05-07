@@ -154,3 +154,68 @@ class TestScheduleEngine:
         # 如果周末被错误占用了，这个任务会被排到 5-13
         # 如果周末没被占用，应该从 5-8 开始
         assert item2.start_date == date(2026, 5, 8), f"期望 REQ-002 开始于 2026-05-08，但实际开始于 {item2.start_date}"
+
+    def test_used_slots_no_weekend(self):
+        """测试：跨周末排期时，used_slots 不包含周六和周日"""
+        requirements = [
+            Requirement(
+                req_id="REQ-001", name="跨周末任务", frontend_days=3, backend_days=0, test_days=0,
+                priority="P0", deadline=date(2026, 5, 20), dependencies=[], status="待排期"
+            ),
+        ]
+        resources = [
+            Resource(name="张三", roles=["前端"], available_start=date(2026, 5, 1), available_end=date(2026, 6, 30)),
+        ]
+        holidays = []
+        result = schedule_requirements(requirements, resources, holidays, start_date=date(2026, 5, 8))  # 周五
+
+        item = result.items[0]
+        assert item.used_slots, "used_slots 不应为空"
+        for slot in item.used_slots:
+            slot_date = date.fromisoformat(slot["date"])
+            assert slot_date.weekday() < 5, f"used_slots 中包含周末日期: {slot_date}"
+
+    def test_used_slots_count(self):
+        """测试：used_slots 数量等于 days * 2"""
+        requirements = [
+            Requirement(
+                req_id="REQ-001", name="2天任务", frontend_days=2, backend_days=0, test_days=0,
+                priority="P0", deadline=date(2026, 5, 20), dependencies=[], status="待排期"
+            ),
+        ]
+        resources = [
+            Resource(name="张三", roles=["前端"], available_start=date(2026, 5, 1), available_end=date(2026, 6, 30)),
+        ]
+        holidays = []
+        result = schedule_requirements(requirements, resources, holidays, start_date=date(2026, 5, 1))
+
+        item = result.items[0]
+        expected_slots = int(item.days * 2)
+        assert len(item.used_slots) == expected_slots, f"期望 used_slots 数量为 {expected_slots}，实际为 {len(item.used_slots)}"
+
+    def test_daily_hours_4(self):
+        """测试：daily_hours=4 的资源每天最多只出现一个 used_slot"""
+        requirements = [
+            Requirement(
+                req_id="REQ-001", name="半天任务", frontend_days=2, backend_days=0, test_days=0,
+                priority="P0", deadline=date(2026, 5, 20), dependencies=[], status="待排期"
+            ),
+        ]
+        resources = [
+            Resource(
+                name="张三", roles=["前端"], available_start=date(2026, 5, 1),
+                available_end=date(2026, 6, 30), daily_hours=4
+            ),
+        ]
+        holidays = []
+        result = schedule_requirements(requirements, resources, holidays, start_date=date(2026, 5, 1))
+
+        item = result.items[0]
+        # 统计每天出现的槽位数
+        date_count = {}
+        for slot in item.used_slots:
+            d = slot["date"]
+            date_count[d] = date_count.get(d, 0) + 1
+
+        for d, count in date_count.items():
+            assert count <= 1, f"daily_hours=4 的资源在 {d} 出现了 {count} 个槽位，应最多 1 个"

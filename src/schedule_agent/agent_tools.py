@@ -163,6 +163,12 @@ def simulate_change_tool(
         end_date: 休假结束日期，格式 YYYY-MM-DD
         strategy: 排期策略
     """
+    if change_type != "person_vacation":
+        return {
+            "success": False,
+            "message": f"当前只支持人员休假模拟 (person_vacation)，不支持的 change_type: {change_type}",
+        }
+
     if not project_context.has_data():
         return {
             "success": False,

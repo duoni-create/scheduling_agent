@@ -15,39 +15,45 @@ def check_conflicts(
     # 1. 检测同一个人同一个半天是否被安排多个任务
     occupied = {}
     for item in schedule_result.items:
-        if item.owner and item.start_date and item.end_date:
-            from .calendar_service import generate_half_day_slots, next_half_day
-            current_date, current_half = item.start_date, item.start_half
-            slots_needed = int(item.days * 2)
-            for _ in range(slots_needed):
-                key = (item.owner, current_date, current_half)
+        if item.owner and item.used_slots:
+            for slot in item.used_slots:
+                slot_date = slot.get("date")
+                slot_half = slot.get("half")
+                key = (item.owner, slot_date, slot_half)
                 if key in occupied:
                     conflicts.append(
-                        f"冲突: {item.owner} 在 {current_date} {current_half} 被安排了多个任务"
+                        f"冲突: {item.owner} 在 {slot_date} {slot_half} 被安排了多个任务"
                     )
                 occupied[key] = item.req_id
-                current_date, current_half = next_half_day(current_date, current_half)
 
-    # 2. 检测是否安排在节假日
+    # 2. 检测 used_slots 里的日期是否为工作日
     for item in schedule_result.items:
-        if item.start_date and not is_workday(item.start_date, holidays):
-            conflicts.append(
-                f"冲突: {item.req_id} 的 {item.subtask_type} 任务开始日期 {item.start_date} 不是工作日"
-            )
-        if item.end_date and not is_workday(item.end_date, holidays):
-            conflicts.append(
-                f"冲突: {item.req_id} 的 {item.subtask_type} 任务结束日期 {item.end_date} 不是工作日"
-            )
+        if item.used_slots:
+            for slot in item.used_slots:
+                slot_date_str = slot.get("date")
+                if slot_date_str:
+                    from datetime import datetime
+                    slot_date = datetime.strptime(slot_date_str, "%Y-%m-%d").date()
+                    if not is_workday(slot_date, holidays):
+                        conflicts.append(
+                            f"冲突: {item.req_id} 的 {item.subtask_type} 任务占用日期 {slot_date} 不是工作日"
+                        )
 
-    # 3. 检测是否安排在员工休假日
+    # 3. 检测 used_slots 里的日期是否为员工休假日
     resource_map = {r.name: r for r in resources}
     for item in schedule_result.items:
-        if item.owner and item.start_date:
+        if item.owner and item.used_slots:
             res = resource_map.get(item.owner)
-            if res and item.start_date in res.vacations:
-                conflicts.append(
-                    f"冲突: {item.owner} 在 {item.start_date} 休假，但安排了 {item.req_id} 的 {item.subtask_type} 任务"
-                )
+            if res and res.vacations:
+                for slot in item.used_slots:
+                    slot_date_str = slot.get("date")
+                    if slot_date_str:
+                        from datetime import datetime
+                        slot_date = datetime.strptime(slot_date_str, "%Y-%m-%d").date()
+                        if slot_date in res.vacations:
+                            conflicts.append(
+                                f"冲突: {item.owner} 在 {slot_date} 休假，但安排了 {item.req_id} 的 {item.subtask_type} 任务"
+                            )
 
     # 4. 检测依赖是否被破坏
     req_map = {r.req_id: r for r in requirements}

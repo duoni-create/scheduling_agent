@@ -6,6 +6,11 @@ def format_schedule_result_for_table(schedule_result: ScheduleResult) -> pd.Data
     """格式化排期结果为 DataFrame"""
     data = []
     for item in schedule_result.items:
+        slots_str = ""
+        if item.used_slots:
+            slots_str = ", ".join(
+                f"{slot['date']} {slot['half']}" for slot in item.used_slots
+            )
         data.append({
             "需求ID": item.req_id,
             "需求名称": item.req_name,
@@ -20,6 +25,7 @@ def format_schedule_result_for_table(schedule_result: ScheduleResult) -> pd.Data
             "是否延期": "是" if item.delayed else "否",
             "延期天数": item.delay_days,
             "状态": item.status,
+            "实际占用槽位": slots_str,
         })
 
     for item in schedule_result.unscheduled_items:

@@ -92,6 +92,7 @@ class ScheduleItem(BaseModel):
     delay_days: int = 0
     status: str
     reason: str = ""
+    used_slots: list[dict] = []
 
 
 class ScheduleResult(BaseModel):
