@@ -31,6 +31,13 @@ class Requirement(BaseModel):
             raise ValueError("工时必须是 0.5 的倍数")
         return v
 
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, v):
+        if not v or not v.strip():
+            raise ValueError("需求名称不能为空")
+        return v.strip()
+
     @field_validator("req_id")
     @classmethod
     def validate_req_id(cls, v):
@@ -47,9 +54,18 @@ class Resource(BaseModel):
     daily_hours: int = Field(default=8)
     vacations: list[date] = []
 
+    @field_validator("name")
+    @classmethod
+    def validate_resource_name(cls, v):
+        if not v or not v.strip():
+            raise ValueError("人员姓名不能为空")
+        return v.strip()
+
     @field_validator("roles")
     @classmethod
     def validate_roles(cls, v):
+        if not v:
+            raise ValueError("角色不能为空")
         valid_roles = {"前端", "后端", "测试"}
         for role in v:
             if role not in valid_roles:

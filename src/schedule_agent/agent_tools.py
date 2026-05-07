@@ -8,6 +8,12 @@ from .export_service import export_schedule_to_excel
 from .baseline_store import save_baseline, load_baseline
 from .sqlite_store import get_db_path
 from .models import Requirement, Resource, Holiday, ScheduleResult
+from .validation import (
+    validate_strategy,
+    validate_required_text,
+    parse_yyyy_mm_dd,
+    validate_date_range,
+)
 
 
 @tool
@@ -112,6 +118,10 @@ def run_schedule_tool(strategy: str = "deadline_first") -> dict:
     Args:
         strategy: 排期策略，可选 deadline_first, priority_first, workload_balance
     """
+    is_valid, error_msg = validate_strategy(strategy)
+    if not is_valid:
+        return {"success": False, "message": error_msg}
+
     validation = validate_schedule_data_tool.invoke({})
     if not validation.get("valid"):
         return {
@@ -166,6 +176,10 @@ def set_baseline_schedule_tool(
         iteration_name: 迭代名称，例如"2026年5月第1期迭代"
         note: 备注
     """
+    is_valid, error_msg = validate_required_text(iteration_name, "迭代名称")
+    if not is_valid:
+        return {"success": False, "message": error_msg}
+
     if not project_context.has_data():
         return {
             "success": False,
@@ -243,11 +257,31 @@ def simulate_change_tool(
         end_date: 休假结束日期，格式 YYYY-MM-DD
         strategy: 排期策略
     """
+    # 参数校验
+    is_valid, error_msg = validate_required_text(change_type, "change_type")
+    if not is_valid:
+        return {"success": False, "message": error_msg}
+
     if change_type != "person_vacation":
         return {
             "success": False,
             "message": f"当前只支持人员休假模拟 (person_vacation)，不支持的 change_type: {change_type}",
         }
+
+    is_valid, error_msg = validate_required_text(person, "人员姓名")
+    if not is_valid:
+        return {"success": False, "message": "模拟请假影响需要提供人员姓名。"}
+
+    if not start_date or not str(start_date).strip():
+        return {"success": False, "message": "模拟请假影响需要提供请假开始日期。"}
+
+    if not end_date or not str(end_date).strip():
+        return {"success": False, "message": "模拟请假影响需要提供请假结束日期。"}
+
+    # strategy 校验
+    is_valid, error_msg = validate_strategy(strategy)
+    if not is_valid:
+        return {"success": False, "message": error_msg}
 
     if not project_context.has_data():
         return {
@@ -278,8 +312,13 @@ def simulate_change_tool(
             "message": f"找不到人员 {person}",
         }
 
-    start = datetime.strptime(start_date, "%Y-%m-%d").date()
-    end = datetime.strptime(end_date, "%Y-%m-%d").date()
+    try:
+        start = parse_yyyy_mm_dd(start_date, "start_date")
+        end = parse_yyyy_mm_dd(end_date, "end_date")
+        validate_date_range(start, end, "end_date")
+    except ValueError as e:
+        return {"success": False, "message": str(e)}
+
     current = start
     while current <= end:
         if current not in target_resource.vacations:
@@ -352,6 +391,18 @@ def check_feasibility_tool(task_id: str, target_deadline: str, strategy: str = "
         target_deadline: 目标日期，格式 YYYY-MM-DD
         strategy: 排期策略
     """
+    # 参数校验
+    is_valid, error_msg = validate_required_text(task_id, "task_id")
+    if not is_valid:
+        return {"success": False, "message": error_msg}
+
+    if not target_deadline or not str(target_deadline).strip():
+        return {"success": False, "message": "目标日期 target_deadline 不能为空。"}
+
+    is_valid, error_msg = validate_strategy(strategy)
+    if not is_valid:
+        return {"success": False, "message": error_msg}
+
     if not project_context.has_data():
         return {
             "success": False,
@@ -359,7 +410,11 @@ def check_feasibility_tool(task_id: str, target_deadline: str, strategy: str = "
         }
 
     data = project_context.get_data()
-    target = datetime.strptime(target_deadline, "%Y-%m-%d").date()
+
+    try:
+        target = parse_yyyy_mm_dd(target_deadline, "target_deadline")
+    except ValueError as e:
+        return {"success": False, "message": str(e)}
 
     # 深拷贝并修改 deadline
     new_requirements = copy.deepcopy(data.requirements)
@@ -643,6 +698,12 @@ def export_schedule_tool(target: str = "baseline", format: str = "excel") -> dic
         target: 导出目标，可选 baseline/draft/simulated，默认 baseline
         format: 导出格式，目前只支持 excel
     """
+    if format != "excel":
+        return {
+            "success": False,
+            "message": f"不支持的导出格式：{format}，当前只支持 excel。",
+        }
+
     if target == "baseline":
         result = project_context.get_baseline_result()
         name = "正式排期"

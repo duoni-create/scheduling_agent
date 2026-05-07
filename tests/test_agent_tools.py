@@ -142,3 +142,79 @@ class TestAgentTools:
         assert os.path.exists(result["file_path"])
         if os.path.exists(result["file_path"]):
             os.remove(result["file_path"])
+
+    def test_run_schedule_invalid_strategy(self, sample_data):
+        result = run_schedule_tool.invoke({"strategy": "bad_strategy"})
+        assert result["success"] is False
+        assert "不支持的排期策略" in result["message"]
+
+    def test_set_baseline_empty_iteration_name(self, sample_data):
+        run_schedule_tool.invoke({"strategy": "deadline_first"})
+        result = set_baseline_schedule_tool.invoke({"iteration_name": "", "note": ""})
+        assert result["success"] is False
+        assert "迭代名称不能为空" in result["message"]
+
+    def test_simulate_change_missing_dates(self, sample_data):
+        run_schedule_tool.invoke({"strategy": "deadline_first"})
+        set_baseline_schedule_tool.invoke({"iteration_name": "测试", "note": ""})
+        result = simulate_change_tool.invoke({
+            "change_type": "person_vacation",
+            "person": "张三",
+            "start_date": "",
+            "end_date": "2026-05-15",
+            "strategy": "deadline_first",
+        })
+        assert result["success"] is False
+        assert "开始日期" in result["message"] or "人员姓名" in result["message"]
+
+    def test_simulate_change_invalid_date_format(self, sample_data):
+        run_schedule_tool.invoke({"strategy": "deadline_first"})
+        set_baseline_schedule_tool.invoke({"iteration_name": "测试", "note": ""})
+        result = simulate_change_tool.invoke({
+            "change_type": "person_vacation",
+            "person": "张三",
+            "start_date": "2026/05/11",
+            "end_date": "2026-05-15",
+            "strategy": "deadline_first",
+        })
+        assert result["success"] is False
+        assert "日期格式错误" in result["message"]
+
+    def test_simulate_change_end_before_start(self, sample_data):
+        run_schedule_tool.invoke({"strategy": "deadline_first"})
+        set_baseline_schedule_tool.invoke({"iteration_name": "测试", "note": ""})
+        result = simulate_change_tool.invoke({
+            "change_type": "person_vacation",
+            "person": "张三",
+            "start_date": "2026-05-15",
+            "end_date": "2026-05-11",
+            "strategy": "deadline_first",
+        })
+        assert result["success"] is False
+        assert "早于" in result["message"]
+
+    def test_check_feasibility_missing_task_id(self, sample_data):
+        run_schedule_tool.invoke({"strategy": "deadline_first"})
+        result = check_feasibility_tool.invoke({
+            "task_id": "",
+            "target_deadline": "2026-05-15",
+            "strategy": "deadline_first",
+        })
+        assert result["success"] is False
+        assert "task_id" in result["message"] or "不能为空" in result["message"]
+
+    def test_check_feasibility_invalid_deadline(self, sample_data):
+        run_schedule_tool.invoke({"strategy": "deadline_first"})
+        result = check_feasibility_tool.invoke({
+            "task_id": "REQ-003",
+            "target_deadline": "明天",
+            "strategy": "deadline_first",
+        })
+        assert result["success"] is False
+        assert "日期格式错误" in result["message"]
+
+    def test_export_schedule_invalid_format(self, sample_data):
+        run_schedule_tool.invoke({"strategy": "deadline_first"})
+        result = export_schedule_tool.invoke({"target": "draft", "format": "pdf"})
+        assert result["success"] is False
+        assert "不支持的导出格式" in result["message"]

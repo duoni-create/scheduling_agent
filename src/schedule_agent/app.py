@@ -50,6 +50,18 @@ with st.sidebar:
 
 # 数据区
 st.header("1. 数据上传")
+st.markdown("""
+**Excel 必须包含 3 个 Sheet：**
+- 需求表
+- 资源表
+- 节假日表
+
+**格式要求：**
+- 日期格式统一使用 `YYYY-MM-DD`
+- 工时必须是 0.5 的倍数
+- 每日工时只支持 4 或 8
+- 优先级必须是 P0 / P1 / P2 / P3
+""")
 uploaded_file = st.file_uploader("上传排期 Excel", type=["xlsx"])
 
 if uploaded_file:
@@ -60,8 +72,12 @@ if uploaded_file:
         requirements, resources, holidays = parse_excel(temp_path)
         project_context.load_data(requirements, resources, holidays)
         st.success("Excel 解析成功")
+    except ValueError as e:
+        st.error(f"数据校验失败")
+        st.code(str(e))
     except Exception as e:
         st.error(f"解析失败: {e}")
+        st.exception(e)
 
 if project_context.has_data():
     data = project_context.get_data()
