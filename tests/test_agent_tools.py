@@ -7,10 +7,12 @@ from schedule_agent.agent_tools import (
     load_project_data_tool,
     validate_schedule_data_tool,
     run_schedule_tool,
+    set_baseline_schedule_tool,
+    load_baseline_schedule_tool,
     simulate_change_tool,
     check_feasibility_tool,
     explain_delay_tool,
-    compare_schedule_tool,
+    compare_with_baseline_tool,
     export_schedule_tool,
 )
 from schedule_agent.sample_generator import generate_sample_excel
@@ -44,14 +46,52 @@ class TestAgentTools:
         result = validate_schedule_data_tool.invoke({})
         assert result["valid"] is True
 
-    def test_run_schedule_tool(self, sample_data):
+    def test_run_schedule_tool_only_sets_draft(self, sample_data):
         result = run_schedule_tool.invoke({"strategy": "deadline_first"})
         assert result["success"] is True
-        assert "summary" in result
+        assert result["result_type"] == "draft"
+        assert project_context.get_draft_result() is not None
+        assert project_context.get_baseline_result() is None
 
-    def test_simulate_change_tool(self, sample_data):
-        # 先建立 baseline
+    def test_set_baseline_schedule_tool(self, sample_data):
+        # 先 run_schedule_tool
         run_schedule_tool.invoke({"strategy": "deadline_first"})
+        # 再 set_baseline_schedule_tool
+        result = set_baseline_schedule_tool.invoke({
+            "iteration_name": "2026年5月第1期",
+            "note": "测试",
+        })
+        assert result["success"] is True
+        assert project_context.get_baseline_result() is not None
+        assert project_context.baseline_meta["iteration_name"] == "2026年5月第1期"
+
+    def test_simulate_change_invalid_type(self, sample_data):
+        result = simulate_change_tool.invoke({
+            "change_type": "invalid_type",
+            "person": "张三",
+            "start_date": "2026-05-11",
+            "end_date": "2026-05-15",
+            "strategy": "deadline_first",
+        })
+        assert result["success"] is False
+        assert "只支持人员休假模拟" in result["message"]
+
+    def test_simulate_change_requires_baseline(self, sample_data):
+        run_schedule_tool.invoke({"strategy": "deadline_first"})
+        # 不设置 baseline，直接 simulate
+        result = simulate_change_tool.invoke({
+            "change_type": "person_vacation",
+            "person": "张三",
+            "start_date": "2026-05-11",
+            "end_date": "2026-05-15",
+            "strategy": "deadline_first",
+        })
+        assert result["success"] is False
+        assert "还没有正式排期" in result["message"]
+
+    def test_simulate_change_compare_with_baseline(self, sample_data):
+        run_schedule_tool.invoke({"strategy": "deadline_first"})
+        set_baseline_schedule_tool.invoke({"iteration_name": "测试迭代", "note": ""})
         result = simulate_change_tool.invoke({
             "change_type": "person_vacation",
             "person": "张三",
@@ -60,7 +100,9 @@ class TestAgentTools:
             "strategy": "deadline_first",
         })
         assert result["success"] is True
+        assert result["base"] == "baseline"
         assert "affected_items" in result
+        assert project_context.get_simulated_result() is not None
 
     def test_check_feasibility_tool(self, sample_data):
         run_schedule_tool.invoke({"strategy": "deadline_first"})
@@ -77,28 +119,25 @@ class TestAgentTools:
         assert result["success"] is False
         assert "先运行排期" in result["message"]
 
-    def test_simulate_change_invalid_type(self, sample_data):
-        result = simulate_change_tool.invoke({
-            "change_type": "invalid_type",
+    def test_compare_with_baseline_tool(self, sample_data):
+        run_schedule_tool.invoke({"strategy": "deadline_first"})
+        set_baseline_schedule_tool.invoke({"iteration_name": "测试", "note": ""})
+        simulate_change_tool.invoke({
+            "change_type": "person_vacation",
             "person": "张三",
             "start_date": "2026-05-11",
             "end_date": "2026-05-15",
             "strategy": "deadline_first",
         })
-        assert result["success"] is False
-        assert "只支持人员休假模拟" in result["message"]
-
-    def test_compare_schedule_tool(self, sample_data):
-        result = compare_schedule_tool.invoke({
-            "strategy_a": "deadline_first",
-            "strategy_b": "workload_balance",
-        })
+        result = compare_with_baseline_tool.invoke({"compare_target": "simulated"})
         assert result["success"] is True
-        assert "better_strategy" in result
+        assert "baseline_summary" in result
+        assert "target_summary" in result
 
-    def test_export_schedule_tool(self, sample_data):
+    def test_export_baseline_schedule_tool(self, sample_data):
         run_schedule_tool.invoke({"strategy": "deadline_first"})
-        result = export_schedule_tool.invoke({"format": "excel"})
+        set_baseline_schedule_tool.invoke({"iteration_name": "测试", "note": ""})
+        result = export_schedule_tool.invoke({"target": "baseline", "format": "excel"})
         assert result["success"] is True
         assert os.path.exists(result["file_path"])
         if os.path.exists(result["file_path"]):

@@ -7,6 +7,7 @@ from schedule_agent.schedule_engine import schedule_requirements
 from schedule_agent.conflict_checker import check_conflicts
 from schedule_agent.project_context import project_context
 from schedule_agent.export_service import export_schedule_to_excel
+from schedule_agent.baseline_store import save_baseline, load_baseline
 from schedule_agent.agent_runner import run_agent
 from schedule_agent.result_formatter import (
     format_schedule_result_for_table,
@@ -98,8 +99,8 @@ if project_context.has_data():
         ])
         st.dataframe(hol_df, use_container_width=True)
 
-# 手动排期区
-st.header("2. 手动排期")
+# 临时排期区
+st.header("2. 生成临时排期")
 if project_context.has_data():
     strategy = st.selectbox(
         "选择排期策略",
@@ -120,15 +121,53 @@ if project_context.has_data():
                 data.holidays,
                 strategy=strategy,
             )
-            project_context.set_result(result)
-            st.success("排期完成")
+            project_context.set_draft_result(result)
+            st.success("临时排期已生成")
             st.rerun()
 
-# 显示排期结果
-if project_context.get_result():
-    result = project_context.get_result()
+# 正式排期区
+st.header("3. 本迭代正式排期")
+if project_context.has_data():
+    col1, col2 = st.columns(2)
+    with col1:
+        iteration_name = st.text_input("迭代名称", value="2026年5月第1期迭代")
+    with col2:
+        note = st.text_input("备注", value="")
 
-    st.header("3. 排期结果")
+    if project_context.get_draft_result():
+        if st.button("设为本迭代正式排期", type="primary"):
+            confirm_result = project_context.confirm_baseline(iteration_name=iteration_name, note=note)
+            if confirm_result["success"]:
+                data = project_context.get_data()
+                baseline = project_context.get_baseline_result()
+                save_baseline(data, baseline, project_context.baseline_meta)
+                st.success("已设为本迭代正式排期并保存")
+            else:
+                st.error(confirm_result["message"])
+            st.rerun()
+    else:
+        st.info("请先生成临时排期")
+
+    if st.button("加载已保存的正式排期"):
+        loaded = load_baseline()
+        if loaded:
+            project_data, baseline_result, baseline_meta = loaded
+            project_context.project_data = project_data
+            project_context.baseline_result = baseline_result
+            project_context.baseline_meta = baseline_meta
+            st.success("已加载正式排期")
+        else:
+            st.error("没有找到已保存的正式排期")
+        st.rerun()
+
+    if project_context.has_baseline():
+        st.success(f"当前已有正式排期：{project_context.baseline_meta.get('iteration_name', '')}")
+
+# 排期结果展示区
+def show_schedule_result(result, result_name):
+    if not result:
+        st.info(f"当前没有 {result_name}")
+        return
 
     st.subheader("汇总信息")
     st.text(format_summary_text(result))
@@ -149,13 +188,15 @@ if project_context.get_result():
 
     # 冲突检测
     st.subheader("冲突检测")
-    data = project_context.get_data()
-    conflicts = check_conflicts(result, data.requirements, data.resources, data.holidays)
-    st.text(format_conflicts(conflicts))
+    if project_context.has_data():
+        data = project_context.get_data()
+        conflicts = check_conflicts(result, data.requirements, data.resources, data.holidays)
+        st.text(format_conflicts(conflicts))
+    else:
+        st.info("没有项目数据，无法检测冲突")
 
-    # 导出区
-    st.header("4. 导出")
-    if st.button("导出当前排期结果为 Excel"):
+    # 导出
+    if st.button(f"导出 {result_name} 为 Excel", key=f"export_{result_name}"):
         filepath = export_schedule_to_excel(result)
         st.success(f"已导出: {filepath}")
         with open(filepath, "rb") as f:
@@ -164,18 +205,34 @@ if project_context.get_result():
                 data=f,
                 file_name=os.path.basename(filepath),
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                key=f"download_{result_name}",
             )
+
+
+st.header("4. 排期结果展示")
+if project_context.has_data() or project_context.has_baseline():
+    tab1, tab2, tab3 = st.tabs(["正式排期", "临时排期", "模拟排期"])
+
+    with tab1:
+        show_schedule_result(project_context.get_baseline_result(), "正式排期")
+
+    with tab2:
+        show_schedule_result(project_context.get_draft_result(), "临时排期")
+
+    with tab3:
+        show_schedule_result(project_context.get_simulated_result(), "模拟排期")
 
 # Agent 对话区
 st.header("5. Agent 对话")
 st.markdown("""
 你可以尝试以下问题：
-- 帮我按 deadline 优先排一下
-- 如果张三 2026-05-11 到 2026-05-15 休假，会影响哪些需求？
+- 帮我按 deadline 优先生成临时排期
+- 将当前临时排期设为本迭代正式排期
+- 如果张三 2026-05-11 到 2026-05-15 休假，会影响正式排期吗？
 - REQ-003 能不能提前到 2026-05-15 前完成？
-- 为什么 REQ-003 延期了？
-- 对比 deadline 优先和 workload_balance
-- 导出当前排期结果
+- 为什么正式排期里 REQ-003 延期了？
+- 把本迭代正式排期导出成 Excel
+- 加载已保存的正式排期
 """)
 
 user_input = st.text_input("输入你的问题")

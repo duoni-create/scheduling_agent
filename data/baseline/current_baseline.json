@@ -1,0 +1,1963 @@
+{
+  "baseline_meta": {
+    "iteration_name": "测试",
+    "note": "",
+    "confirmed_at": "2026-05-07T16:17:16.196152",
+    "strategy": "deadline_first"
+  },
+  "project_data": {
+    "requirements": [
+      {
+        "req_id": "REQ-001",
+        "name": "首页改版",
+        "frontend_days": 3.0,
+        "backend_days": 2.0,
+        "test_days": 1.5,
+        "priority": "P0",
+        "deadline": "2026-05-20",
+        "dependencies": [],
+        "status": "待排期",
+        "memo": "nan"
+      },
+      {
+        "req_id": "REQ-002",
+        "name": "用户中心",
+        "frontend_days": 2.0,
+        "backend_days": 3.0,
+        "test_days": 1.0,
+        "priority": "P1",
+        "deadline": "2026-05-25",
+        "dependencies": [
+          "REQ-001"
+        ],
+        "status": "待排期",
+        "memo": "依赖首页改版完成"
+      },
+      {
+        "req_id": "REQ-003",
+        "name": "支付模块",
+        "frontend_days": 2.5,
+        "backend_days": 4.0,
+        "test_days": 2.0,
+        "priority": "P0",
+        "deadline": "2026-05-18",
+        "dependencies": [
+          "REQ-002"
+        ],
+        "status": "待排期",
+        "memo": "nan"
+      },
+      {
+        "req_id": "REQ-004",
+        "name": "消息推送",
+        "frontend_days": 1.5,
+        "backend_days": 1.0,
+        "test_days": 0.5,
+        "priority": "P2",
+        "deadline": "2026-05-30",
+        "dependencies": [],
+        "status": "待排期",
+        "memo": "nan"
+      },
+      {
+        "req_id": "REQ-005",
+        "name": "数据分析",
+        "frontend_days": 4.0,
+        "backend_days": 3.0,
+        "test_days": 2.0,
+        "priority": "P1",
+        "deadline": "2026-05-22",
+        "dependencies": [
+          "REQ-003"
+        ],
+        "status": "待排期",
+        "memo": "nan"
+      },
+      {
+        "req_id": "REQ-006",
+        "name": "权限系统",
+        "frontend_days": 2.0,
+        "backend_days": 2.5,
+        "test_days": 1.0,
+        "priority": "P2",
+        "deadline": "2026-05-28",
+        "dependencies": [],
+        "status": "待排期",
+        "memo": "nan"
+      }
+    ],
+    "resources": [
+      {
+        "name": "张三",
+        "roles": [
+          "前端"
+        ],
+        "available_start": "2026-05-01",
+        "available_end": "2026-06-30",
+        "daily_hours": 8,
+        "vacations": [
+          "2026-05-12",
+          "2026-05-13"
+        ]
+      },
+      {
+        "name": "李四",
+        "roles": [
+          "后端",
+          "测试"
+        ],
+        "available_start": "2026-05-01",
+        "available_end": "2026-06-30",
+        "daily_hours": 8,
+        "vacations": []
+      },
+      {
+        "name": "王五",
+        "roles": [
+          "前端",
+          "测试"
+        ],
+        "available_start": "2026-05-01",
+        "available_end": "2026-06-30",
+        "daily_hours": 8,
+        "vacations": []
+      },
+      {
+        "name": "赵六",
+        "roles": [
+          "后端"
+        ],
+        "available_start": "2026-05-01",
+        "available_end": "2026-06-30",
+        "daily_hours": 8,
+        "vacations": []
+      }
+    ],
+    "holidays": [
+      {
+        "date": "2026-05-01",
+        "name": "劳动节",
+        "is_workday": false
+      },
+      {
+        "date": "2026-05-02",
+        "name": "劳动节调休",
+        "is_workday": false
+      },
+      {
+        "date": "2026-05-05",
+        "name": "劳动节调休上班",
+        "is_workday": true
+      }
+    ],
+    "current_result": {
+      "items": [
+        {
+          "req_id": "REQ-001",
+          "req_name": "首页改版",
+          "subtask_type": "后端",
+          "owner": "李四",
+          "start_date": "2026-05-07",
+          "start_half": "上午",
+          "end_date": "2026-05-08",
+          "end_half": "下午",
+          "days": 2.0,
+          "deadline": "2026-05-20",
+          "delayed": false,
+          "delay_days": 0,
+          "status": "已排期",
+          "reason": "",
+          "used_slots": [
+            {
+              "date": "2026-05-07",
+              "half": "上午"
+            },
+            {
+              "date": "2026-05-07",
+              "half": "下午"
+            },
+            {
+              "date": "2026-05-08",
+              "half": "上午"
+            },
+            {
+              "date": "2026-05-08",
+              "half": "下午"
+            }
+          ]
+        },
+        {
+          "req_id": "REQ-001",
+          "req_name": "首页改版",
+          "subtask_type": "前端",
+          "owner": "王五",
+          "start_date": "2026-05-11",
+          "start_half": "上午",
+          "end_date": "2026-05-13",
+          "end_half": "下午",
+          "days": 3.0,
+          "deadline": "2026-05-20",
+          "delayed": false,
+          "delay_days": 0,
+          "status": "已排期",
+          "reason": "",
+          "used_slots": [
+            {
+              "date": "2026-05-11",
+              "half": "上午"
+            },
+            {
+              "date": "2026-05-11",
+              "half": "下午"
+            },
+            {
+              "date": "2026-05-12",
+              "half": "上午"
+            },
+            {
+              "date": "2026-05-12",
+              "half": "下午"
+            },
+            {
+              "date": "2026-05-13",
+              "half": "上午"
+            },
+            {
+              "date": "2026-05-13",
+              "half": "下午"
+            }
+          ]
+        },
+        {
+          "req_id": "REQ-001",
+          "req_name": "首页改版",
+          "subtask_type": "测试",
+          "owner": "李四",
+          "start_date": "2026-05-14",
+          "start_half": "上午",
+          "end_date": "2026-05-15",
+          "end_half": "上午",
+          "days": 1.5,
+          "deadline": "2026-05-20",
+          "delayed": false,
+          "delay_days": 0,
+          "status": "已排期",
+          "reason": "",
+          "used_slots": [
+            {
+              "date": "2026-05-14",
+              "half": "上午"
+            },
+            {
+              "date": "2026-05-14",
+              "half": "下午"
+            },
+            {
+              "date": "2026-05-15",
+              "half": "上午"
+            }
+          ]
+        },
+        {
+          "req_id": "REQ-006",
+          "req_name": "权限系统",
+          "subtask_type": "后端",
+          "owner": "赵六",
+          "start_date": "2026-05-07",
+          "start_half": "上午",
+          "end_date": "2026-05-11",
+          "end_half": "上午",
+          "days": 2.5,
+          "deadline": "2026-05-28",
+          "delayed": false,
+          "delay_days": 0,
+          "status": "已排期",
+          "reason": "",
+          "used_slots": [
+            {
+              "date": "2026-05-07",
+              "half": "上午"
+            },
+            {
+              "date": "2026-05-07",
+              "half": "下午"
+            },
+            {
+              "date": "2026-05-08",
+              "half": "上午"
+            },
+            {
+              "date": "2026-05-08",
+              "half": "下午"
+            },
+            {
+              "date": "2026-05-11",
+              "half": "上午"
+            }
+          ]
+        },
+        {
+          "req_id": "REQ-006",
+          "req_name": "权限系统",
+          "subtask_type": "前端",
+          "owner": "张三",
+          "start_date": "2026-05-14",
+          "start_half": "上午",
+          "end_date": "2026-05-15",
+          "end_half": "下午",
+          "days": 2.0,
+          "deadline": "2026-05-28",
+          "delayed": false,
+          "delay_days": 0,
+          "status": "已排期",
+          "reason": "",
+          "used_slots": [
+            {
+              "date": "2026-05-14",
+              "half": "上午"
+            },
+            {
+              "date": "2026-05-14",
+              "half": "下午"
+            },
+            {
+              "date": "2026-05-15",
+              "half": "上午"
+            },
+            {
+              "date": "2026-05-15",
+              "half": "下午"
+            }
+          ]
+        },
+        {
+          "req_id": "REQ-006",
+          "req_name": "权限系统",
+          "subtask_type": "测试",
+          "owner": "李四",
+          "start_date": "2026-05-18",
+          "start_half": "上午",
+          "end_date": "2026-05-18",
+          "end_half": "下午",
+          "days": 1.0,
+          "deadline": "2026-05-28",
+          "delayed": false,
+          "delay_days": 0,
+          "status": "已排期",
+          "reason": "",
+          "used_slots": [
+            {
+              "date": "2026-05-18",
+              "half": "上午"
+            },
+            {
+              "date": "2026-05-18",
+              "half": "下午"
+            }
+          ]
+        },
+        {
+          "req_id": "REQ-004",
+          "req_name": "消息推送",
+          "subtask_type": "后端",
+          "owner": "李四",
+          "start_date": "2026-05-11",
+          "start_half": "上午",
+          "end_date": "2026-05-11",
+          "end_half": "下午",
+          "days": 1.0,
+          "deadline": "2026-05-30",
+          "delayed": false,
+          "delay_days": 0,
+          "status": "已排期",
+          "reason": "",
+          "used_slots": [
+            {
+              "date": "2026-05-11",
+              "half": "上午"
+            },
+            {
+              "date": "2026-05-11",
+              "half": "下午"
+            }
+          ]
+        },
+        {
+          "req_id": "REQ-004",
+          "req_name": "消息推送",
+          "subtask_type": "前端",
+          "owner": "王五",
+          "start_date": "2026-05-14",
+          "start_half": "上午",
+          "end_date": "2026-05-15",
+          "end_half": "上午",
+          "days": 1.5,
+          "deadline": "2026-05-30",
+          "delayed": false,
+          "delay_days": 0,
+          "status": "已排期",
+          "reason": "",
+          "used_slots": [
+            {
+              "date": "2026-05-14",
+              "half": "上午"
+            },
+            {
+              "date": "2026-05-14",
+              "half": "下午"
+            },
+            {
+              "date": "2026-05-15",
+              "half": "上午"
+            }
+          ]
+        },
+        {
+          "req_id": "REQ-004",
+          "req_name": "消息推送",
+          "subtask_type": "测试",
+          "owner": "王五",
+          "start_date": "2026-05-18",
+          "start_half": "上午",
+          "end_date": "2026-05-18",
+          "end_half": "上午",
+          "days": 0.5,
+          "deadline": "2026-05-30",
+          "delayed": false,
+          "delay_days": 0,
+          "status": "已排期",
+          "reason": "",
+          "used_slots": [
+            {
+              "date": "2026-05-18",
+              "half": "上午"
+            }
+          ]
+        },
+        {
+          "req_id": "REQ-002",
+          "req_name": "用户中心",
+          "subtask_type": "后端",
+          "owner": "赵六",
+          "start_date": "2026-05-18",
+          "start_half": "上午",
+          "end_date": "2026-05-20",
+          "end_half": "下午",
+          "days": 3.0,
+          "deadline": "2026-05-25",
+          "delayed": false,
+          "delay_days": 0,
+          "status": "已排期",
+          "reason": "",
+          "used_slots": [
+            {
+              "date": "2026-05-18",
+              "half": "上午"
+            },
+            {
+              "date": "2026-05-18",
+              "half": "下午"
+            },
+            {
+              "date": "2026-05-19",
+              "half": "上午"
+            },
+            {
+              "date": "2026-05-19",
+              "half": "下午"
+            },
+            {
+              "date": "2026-05-20",
+              "half": "上午"
+            },
+            {
+              "date": "2026-05-20",
+              "half": "下午"
+            }
+          ]
+        },
+        {
+          "req_id": "REQ-002",
+          "req_name": "用户中心",
+          "subtask_type": "前端",
+          "owner": "张三",
+          "start_date": "2026-05-21",
+          "start_half": "上午",
+          "end_date": "2026-05-22",
+          "end_half": "下午",
+          "days": 2.0,
+          "deadline": "2026-05-25",
+          "delayed": false,
+          "delay_days": 0,
+          "status": "已排期",
+          "reason": "",
+          "used_slots": [
+            {
+              "date": "2026-05-21",
+              "half": "上午"
+            },
+            {
+              "date": "2026-05-21",
+              "half": "下午"
+            },
+            {
+              "date": "2026-05-22",
+              "half": "上午"
+            },
+            {
+              "date": "2026-05-22",
+              "half": "下午"
+            }
+          ]
+        },
+        {
+          "req_id": "REQ-002",
+          "req_name": "用户中心",
+          "subtask_type": "测试",
+          "owner": "李四",
+          "start_date": "2026-05-25",
+          "start_half": "上午",
+          "end_date": "2026-05-25",
+          "end_half": "下午",
+          "days": 1.0,
+          "deadline": "2026-05-25",
+          "delayed": false,
+          "delay_days": 0,
+          "status": "已排期",
+          "reason": "",
+          "used_slots": [
+            {
+              "date": "2026-05-25",
+              "half": "上午"
+            },
+            {
+              "date": "2026-05-25",
+              "half": "下午"
+            }
+          ]
+        },
+        {
+          "req_id": "REQ-003",
+          "req_name": "支付模块",
+          "subtask_type": "后端",
+          "owner": "李四",
+          "start_date": "2026-05-26",
+          "start_half": "上午",
+          "end_date": "2026-05-29",
+          "end_half": "下午",
+          "days": 4.0,
+          "deadline": "2026-05-18",
+          "delayed": true,
+          "delay_days": 11,
+          "status": "已排期",
+          "reason": "",
+          "used_slots": [
+            {
+              "date": "2026-05-26",
+              "half": "上午"
+            },
+            {
+              "date": "2026-05-26",
+              "half": "下午"
+            },
+            {
+              "date": "2026-05-27",
+              "half": "上午"
+            },
+            {
+              "date": "2026-05-27",
+              "half": "下午"
+            },
+            {
+              "date": "2026-05-28",
+              "half": "上午"
+            },
+            {
+              "date": "2026-05-28",
+              "half": "下午"
+            },
+            {
+              "date": "2026-05-29",
+              "half": "上午"
+            },
+            {
+              "date": "2026-05-29",
+              "half": "下午"
+            }
+          ]
+        },
+        {
+          "req_id": "REQ-003",
+          "req_name": "支付模块",
+          "subtask_type": "前端",
+          "owner": "张三",
+          "start_date": "2026-06-01",
+          "start_half": "上午",
+          "end_date": "2026-06-03",
+          "end_half": "上午",
+          "days": 2.5,
+          "deadline": "2026-05-18",
+          "delayed": true,
+          "delay_days": 16,
+          "status": "已排期",
+          "reason": "",
+          "used_slots": [
+            {
+              "date": "2026-06-01",
+              "half": "上午"
+            },
+            {
+              "date": "2026-06-01",
+              "half": "下午"
+            },
+            {
+              "date": "2026-06-02",
+              "half": "上午"
+            },
+            {
+              "date": "2026-06-02",
+              "half": "下午"
+            },
+            {
+              "date": "2026-06-03",
+              "half": "上午"
+            }
+          ]
+        },
+        {
+          "req_id": "REQ-003",
+          "req_name": "支付模块",
+          "subtask_type": "测试",
+          "owner": "李四",
+          "start_date": "2026-06-04",
+          "start_half": "上午",
+          "end_date": "2026-06-05",
+          "end_half": "下午",
+          "days": 2.0,
+          "deadline": "2026-05-18",
+          "delayed": true,
+          "delay_days": 18,
+          "status": "已排期",
+          "reason": "",
+          "used_slots": [
+            {
+              "date": "2026-06-04",
+              "half": "上午"
+            },
+            {
+              "date": "2026-06-04",
+              "half": "下午"
+            },
+            {
+              "date": "2026-06-05",
+              "half": "上午"
+            },
+            {
+              "date": "2026-06-05",
+              "half": "下午"
+            }
+          ]
+        },
+        {
+          "req_id": "REQ-005",
+          "req_name": "数据分析",
+          "subtask_type": "后端",
+          "owner": "李四",
+          "start_date": "2026-06-08",
+          "start_half": "上午",
+          "end_date": "2026-06-10",
+          "end_half": "下午",
+          "days": 3.0,
+          "deadline": "2026-05-22",
+          "delayed": true,
+          "delay_days": 19,
+          "status": "已排期",
+          "reason": "",
+          "used_slots": [
+            {
+              "date": "2026-06-08",
+              "half": "上午"
+            },
+            {
+              "date": "2026-06-08",
+              "half": "下午"
+            },
+            {
+              "date": "2026-06-09",
+              "half": "上午"
+            },
+            {
+              "date": "2026-06-09",
+              "half": "下午"
+            },
+            {
+              "date": "2026-06-10",
+              "half": "上午"
+            },
+            {
+              "date": "2026-06-10",
+              "half": "下午"
+            }
+          ]
+        },
+        {
+          "req_id": "REQ-005",
+          "req_name": "数据分析",
+          "subtask_type": "前端",
+          "owner": "张三",
+          "start_date": "2026-06-11",
+          "start_half": "上午",
+          "end_date": "2026-06-16",
+          "end_half": "下午",
+          "days": 4.0,
+          "deadline": "2026-05-22",
+          "delayed": true,
+          "delay_days": 25,
+          "status": "已排期",
+          "reason": "",
+          "used_slots": [
+            {
+              "date": "2026-06-11",
+              "half": "上午"
+            },
+            {
+              "date": "2026-06-11",
+              "half": "下午"
+            },
+            {
+              "date": "2026-06-12",
+              "half": "上午"
+            },
+            {
+              "date": "2026-06-12",
+              "half": "下午"
+            },
+            {
+              "date": "2026-06-15",
+              "half": "上午"
+            },
+            {
+              "date": "2026-06-15",
+              "half": "下午"
+            },
+            {
+              "date": "2026-06-16",
+              "half": "上午"
+            },
+            {
+              "date": "2026-06-16",
+              "half": "下午"
+            }
+          ]
+        },
+        {
+          "req_id": "REQ-005",
+          "req_name": "数据分析",
+          "subtask_type": "测试",
+          "owner": "李四",
+          "start_date": "2026-06-17",
+          "start_half": "上午",
+          "end_date": "2026-06-18",
+          "end_half": "下午",
+          "days": 2.0,
+          "deadline": "2026-05-22",
+          "delayed": true,
+          "delay_days": 27,
+          "status": "已排期",
+          "reason": "",
+          "used_slots": [
+            {
+              "date": "2026-06-17",
+              "half": "上午"
+            },
+            {
+              "date": "2026-06-17",
+              "half": "下午"
+            },
+            {
+              "date": "2026-06-18",
+              "half": "上午"
+            },
+            {
+              "date": "2026-06-18",
+              "half": "下午"
+            }
+          ]
+        }
+      ],
+      "unscheduled_items": [],
+      "delayed_items": [
+        {
+          "req_id": "REQ-003",
+          "req_name": "支付模块",
+          "subtask_type": "后端",
+          "owner": "李四",
+          "start_date": "2026-05-26",
+          "start_half": "上午",
+          "end_date": "2026-05-29",
+          "end_half": "下午",
+          "days": 4.0,
+          "deadline": "2026-05-18",
+          "delayed": true,
+          "delay_days": 11,
+          "status": "已排期",
+          "reason": "",
+          "used_slots": [
+            {
+              "date": "2026-05-26",
+              "half": "上午"
+            },
+            {
+              "date": "2026-05-26",
+              "half": "下午"
+            },
+            {
+              "date": "2026-05-27",
+              "half": "上午"
+            },
+            {
+              "date": "2026-05-27",
+              "half": "下午"
+            },
+            {
+              "date": "2026-05-28",
+              "half": "上午"
+            },
+            {
+              "date": "2026-05-28",
+              "half": "下午"
+            },
+            {
+              "date": "2026-05-29",
+              "half": "上午"
+            },
+            {
+              "date": "2026-05-29",
+              "half": "下午"
+            }
+          ]
+        },
+        {
+          "req_id": "REQ-003",
+          "req_name": "支付模块",
+          "subtask_type": "前端",
+          "owner": "张三",
+          "start_date": "2026-06-01",
+          "start_half": "上午",
+          "end_date": "2026-06-03",
+          "end_half": "上午",
+          "days": 2.5,
+          "deadline": "2026-05-18",
+          "delayed": true,
+          "delay_days": 16,
+          "status": "已排期",
+          "reason": "",
+          "used_slots": [
+            {
+              "date": "2026-06-01",
+              "half": "上午"
+            },
+            {
+              "date": "2026-06-01",
+              "half": "下午"
+            },
+            {
+              "date": "2026-06-02",
+              "half": "上午"
+            },
+            {
+              "date": "2026-06-02",
+              "half": "下午"
+            },
+            {
+              "date": "2026-06-03",
+              "half": "上午"
+            }
+          ]
+        },
+        {
+          "req_id": "REQ-003",
+          "req_name": "支付模块",
+          "subtask_type": "测试",
+          "owner": "李四",
+          "start_date": "2026-06-04",
+          "start_half": "上午",
+          "end_date": "2026-06-05",
+          "end_half": "下午",
+          "days": 2.0,
+          "deadline": "2026-05-18",
+          "delayed": true,
+          "delay_days": 18,
+          "status": "已排期",
+          "reason": "",
+          "used_slots": [
+            {
+              "date": "2026-06-04",
+              "half": "上午"
+            },
+            {
+              "date": "2026-06-04",
+              "half": "下午"
+            },
+            {
+              "date": "2026-06-05",
+              "half": "上午"
+            },
+            {
+              "date": "2026-06-05",
+              "half": "下午"
+            }
+          ]
+        },
+        {
+          "req_id": "REQ-005",
+          "req_name": "数据分析",
+          "subtask_type": "后端",
+          "owner": "李四",
+          "start_date": "2026-06-08",
+          "start_half": "上午",
+          "end_date": "2026-06-10",
+          "end_half": "下午",
+          "days": 3.0,
+          "deadline": "2026-05-22",
+          "delayed": true,
+          "delay_days": 19,
+          "status": "已排期",
+          "reason": "",
+          "used_slots": [
+            {
+              "date": "2026-06-08",
+              "half": "上午"
+            },
+            {
+              "date": "2026-06-08",
+              "half": "下午"
+            },
+            {
+              "date": "2026-06-09",
+              "half": "上午"
+            },
+            {
+              "date": "2026-06-09",
+              "half": "下午"
+            },
+            {
+              "date": "2026-06-10",
+              "half": "上午"
+            },
+            {
+              "date": "2026-06-10",
+              "half": "下午"
+            }
+          ]
+        },
+        {
+          "req_id": "REQ-005",
+          "req_name": "数据分析",
+          "subtask_type": "前端",
+          "owner": "张三",
+          "start_date": "2026-06-11",
+          "start_half": "上午",
+          "end_date": "2026-06-16",
+          "end_half": "下午",
+          "days": 4.0,
+          "deadline": "2026-05-22",
+          "delayed": true,
+          "delay_days": 25,
+          "status": "已排期",
+          "reason": "",
+          "used_slots": [
+            {
+              "date": "2026-06-11",
+              "half": "上午"
+            },
+            {
+              "date": "2026-06-11",
+              "half": "下午"
+            },
+            {
+              "date": "2026-06-12",
+              "half": "上午"
+            },
+            {
+              "date": "2026-06-12",
+              "half": "下午"
+            },
+            {
+              "date": "2026-06-15",
+              "half": "上午"
+            },
+            {
+              "date": "2026-06-15",
+              "half": "下午"
+            },
+            {
+              "date": "2026-06-16",
+              "half": "上午"
+            },
+            {
+              "date": "2026-06-16",
+              "half": "下午"
+            }
+          ]
+        },
+        {
+          "req_id": "REQ-005",
+          "req_name": "数据分析",
+          "subtask_type": "测试",
+          "owner": "李四",
+          "start_date": "2026-06-17",
+          "start_half": "上午",
+          "end_date": "2026-06-18",
+          "end_half": "下午",
+          "days": 2.0,
+          "deadline": "2026-05-22",
+          "delayed": true,
+          "delay_days": 27,
+          "status": "已排期",
+          "reason": "",
+          "used_slots": [
+            {
+              "date": "2026-06-17",
+              "half": "上午"
+            },
+            {
+              "date": "2026-06-17",
+              "half": "下午"
+            },
+            {
+              "date": "2026-06-18",
+              "half": "上午"
+            },
+            {
+              "date": "2026-06-18",
+              "half": "下午"
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "总需求数": 6,
+        "总子任务数": 18,
+        "已排期子任务数": 18,
+        "无法排期子任务数": 0,
+        "延期子任务数": 6,
+        "使用策略": "deadline_first",
+        "最早开始日期": "2026-05-07",
+        "最晚完成日期": "2026-06-18",
+        "人员负载统计": {
+          "李四": 17.5,
+          "王五": 5.0,
+          "赵六": 5.5,
+          "张三": 10.5
+        }
+      },
+      "strategy": "deadline_first"
+    },
+    "current_strategy": "deadline_first"
+  },
+  "baseline_result": {
+    "items": [
+      {
+        "req_id": "REQ-001",
+        "req_name": "首页改版",
+        "subtask_type": "后端",
+        "owner": "李四",
+        "start_date": "2026-05-07",
+        "start_half": "上午",
+        "end_date": "2026-05-08",
+        "end_half": "下午",
+        "days": 2.0,
+        "deadline": "2026-05-20",
+        "delayed": false,
+        "delay_days": 0,
+        "status": "已排期",
+        "reason": "",
+        "used_slots": [
+          {
+            "date": "2026-05-07",
+            "half": "上午"
+          },
+          {
+            "date": "2026-05-07",
+            "half": "下午"
+          },
+          {
+            "date": "2026-05-08",
+            "half": "上午"
+          },
+          {
+            "date": "2026-05-08",
+            "half": "下午"
+          }
+        ]
+      },
+      {
+        "req_id": "REQ-001",
+        "req_name": "首页改版",
+        "subtask_type": "前端",
+        "owner": "王五",
+        "start_date": "2026-05-11",
+        "start_half": "上午",
+        "end_date": "2026-05-13",
+        "end_half": "下午",
+        "days": 3.0,
+        "deadline": "2026-05-20",
+        "delayed": false,
+        "delay_days": 0,
+        "status": "已排期",
+        "reason": "",
+        "used_slots": [
+          {
+            "date": "2026-05-11",
+            "half": "上午"
+          },
+          {
+            "date": "2026-05-11",
+            "half": "下午"
+          },
+          {
+            "date": "2026-05-12",
+            "half": "上午"
+          },
+          {
+            "date": "2026-05-12",
+            "half": "下午"
+          },
+          {
+            "date": "2026-05-13",
+            "half": "上午"
+          },
+          {
+            "date": "2026-05-13",
+            "half": "下午"
+          }
+        ]
+      },
+      {
+        "req_id": "REQ-001",
+        "req_name": "首页改版",
+        "subtask_type": "测试",
+        "owner": "李四",
+        "start_date": "2026-05-14",
+        "start_half": "上午",
+        "end_date": "2026-05-15",
+        "end_half": "上午",
+        "days": 1.5,
+        "deadline": "2026-05-20",
+        "delayed": false,
+        "delay_days": 0,
+        "status": "已排期",
+        "reason": "",
+        "used_slots": [
+          {
+            "date": "2026-05-14",
+            "half": "上午"
+          },
+          {
+            "date": "2026-05-14",
+            "half": "下午"
+          },
+          {
+            "date": "2026-05-15",
+            "half": "上午"
+          }
+        ]
+      },
+      {
+        "req_id": "REQ-006",
+        "req_name": "权限系统",
+        "subtask_type": "后端",
+        "owner": "赵六",
+        "start_date": "2026-05-07",
+        "start_half": "上午",
+        "end_date": "2026-05-11",
+        "end_half": "上午",
+        "days": 2.5,
+        "deadline": "2026-05-28",
+        "delayed": false,
+        "delay_days": 0,
+        "status": "已排期",
+        "reason": "",
+        "used_slots": [
+          {
+            "date": "2026-05-07",
+            "half": "上午"
+          },
+          {
+            "date": "2026-05-07",
+            "half": "下午"
+          },
+          {
+            "date": "2026-05-08",
+            "half": "上午"
+          },
+          {
+            "date": "2026-05-08",
+            "half": "下午"
+          },
+          {
+            "date": "2026-05-11",
+            "half": "上午"
+          }
+        ]
+      },
+      {
+        "req_id": "REQ-006",
+        "req_name": "权限系统",
+        "subtask_type": "前端",
+        "owner": "张三",
+        "start_date": "2026-05-14",
+        "start_half": "上午",
+        "end_date": "2026-05-15",
+        "end_half": "下午",
+        "days": 2.0,
+        "deadline": "2026-05-28",
+        "delayed": false,
+        "delay_days": 0,
+        "status": "已排期",
+        "reason": "",
+        "used_slots": [
+          {
+            "date": "2026-05-14",
+            "half": "上午"
+          },
+          {
+            "date": "2026-05-14",
+            "half": "下午"
+          },
+          {
+            "date": "2026-05-15",
+            "half": "上午"
+          },
+          {
+            "date": "2026-05-15",
+            "half": "下午"
+          }
+        ]
+      },
+      {
+        "req_id": "REQ-006",
+        "req_name": "权限系统",
+        "subtask_type": "测试",
+        "owner": "李四",
+        "start_date": "2026-05-18",
+        "start_half": "上午",
+        "end_date": "2026-05-18",
+        "end_half": "下午",
+        "days": 1.0,
+        "deadline": "2026-05-28",
+        "delayed": false,
+        "delay_days": 0,
+        "status": "已排期",
+        "reason": "",
+        "used_slots": [
+          {
+            "date": "2026-05-18",
+            "half": "上午"
+          },
+          {
+            "date": "2026-05-18",
+            "half": "下午"
+          }
+        ]
+      },
+      {
+        "req_id": "REQ-004",
+        "req_name": "消息推送",
+        "subtask_type": "后端",
+        "owner": "李四",
+        "start_date": "2026-05-11",
+        "start_half": "上午",
+        "end_date": "2026-05-11",
+        "end_half": "下午",
+        "days": 1.0,
+        "deadline": "2026-05-30",
+        "delayed": false,
+        "delay_days": 0,
+        "status": "已排期",
+        "reason": "",
+        "used_slots": [
+          {
+            "date": "2026-05-11",
+            "half": "上午"
+          },
+          {
+            "date": "2026-05-11",
+            "half": "下午"
+          }
+        ]
+      },
+      {
+        "req_id": "REQ-004",
+        "req_name": "消息推送",
+        "subtask_type": "前端",
+        "owner": "王五",
+        "start_date": "2026-05-14",
+        "start_half": "上午",
+        "end_date": "2026-05-15",
+        "end_half": "上午",
+        "days": 1.5,
+        "deadline": "2026-05-30",
+        "delayed": false,
+        "delay_days": 0,
+        "status": "已排期",
+        "reason": "",
+        "used_slots": [
+          {
+            "date": "2026-05-14",
+            "half": "上午"
+          },
+          {
+            "date": "2026-05-14",
+            "half": "下午"
+          },
+          {
+            "date": "2026-05-15",
+            "half": "上午"
+          }
+        ]
+      },
+      {
+        "req_id": "REQ-004",
+        "req_name": "消息推送",
+        "subtask_type": "测试",
+        "owner": "王五",
+        "start_date": "2026-05-18",
+        "start_half": "上午",
+        "end_date": "2026-05-18",
+        "end_half": "上午",
+        "days": 0.5,
+        "deadline": "2026-05-30",
+        "delayed": false,
+        "delay_days": 0,
+        "status": "已排期",
+        "reason": "",
+        "used_slots": [
+          {
+            "date": "2026-05-18",
+            "half": "上午"
+          }
+        ]
+      },
+      {
+        "req_id": "REQ-002",
+        "req_name": "用户中心",
+        "subtask_type": "后端",
+        "owner": "赵六",
+        "start_date": "2026-05-18",
+        "start_half": "上午",
+        "end_date": "2026-05-20",
+        "end_half": "下午",
+        "days": 3.0,
+        "deadline": "2026-05-25",
+        "delayed": false,
+        "delay_days": 0,
+        "status": "已排期",
+        "reason": "",
+        "used_slots": [
+          {
+            "date": "2026-05-18",
+            "half": "上午"
+          },
+          {
+            "date": "2026-05-18",
+            "half": "下午"
+          },
+          {
+            "date": "2026-05-19",
+            "half": "上午"
+          },
+          {
+            "date": "2026-05-19",
+            "half": "下午"
+          },
+          {
+            "date": "2026-05-20",
+            "half": "上午"
+          },
+          {
+            "date": "2026-05-20",
+            "half": "下午"
+          }
+        ]
+      },
+      {
+        "req_id": "REQ-002",
+        "req_name": "用户中心",
+        "subtask_type": "前端",
+        "owner": "张三",
+        "start_date": "2026-05-21",
+        "start_half": "上午",
+        "end_date": "2026-05-22",
+        "end_half": "下午",
+        "days": 2.0,
+        "deadline": "2026-05-25",
+        "delayed": false,
+        "delay_days": 0,
+        "status": "已排期",
+        "reason": "",
+        "used_slots": [
+          {
+            "date": "2026-05-21",
+            "half": "上午"
+          },
+          {
+            "date": "2026-05-21",
+            "half": "下午"
+          },
+          {
+            "date": "2026-05-22",
+            "half": "上午"
+          },
+          {
+            "date": "2026-05-22",
+            "half": "下午"
+          }
+        ]
+      },
+      {
+        "req_id": "REQ-002",
+        "req_name": "用户中心",
+        "subtask_type": "测试",
+        "owner": "李四",
+        "start_date": "2026-05-25",
+        "start_half": "上午",
+        "end_date": "2026-05-25",
+        "end_half": "下午",
+        "days": 1.0,
+        "deadline": "2026-05-25",
+        "delayed": false,
+        "delay_days": 0,
+        "status": "已排期",
+        "reason": "",
+        "used_slots": [
+          {
+            "date": "2026-05-25",
+            "half": "上午"
+          },
+          {
+            "date": "2026-05-25",
+            "half": "下午"
+          }
+        ]
+      },
+      {
+        "req_id": "REQ-003",
+        "req_name": "支付模块",
+        "subtask_type": "后端",
+        "owner": "李四",
+        "start_date": "2026-05-26",
+        "start_half": "上午",
+        "end_date": "2026-05-29",
+        "end_half": "下午",
+        "days": 4.0,
+        "deadline": "2026-05-18",
+        "delayed": true,
+        "delay_days": 11,
+        "status": "已排期",
+        "reason": "",
+        "used_slots": [
+          {
+            "date": "2026-05-26",
+            "half": "上午"
+          },
+          {
+            "date": "2026-05-26",
+            "half": "下午"
+          },
+          {
+            "date": "2026-05-27",
+            "half": "上午"
+          },
+          {
+            "date": "2026-05-27",
+            "half": "下午"
+          },
+          {
+            "date": "2026-05-28",
+            "half": "上午"
+          },
+          {
+            "date": "2026-05-28",
+            "half": "下午"
+          },
+          {
+            "date": "2026-05-29",
+            "half": "上午"
+          },
+          {
+            "date": "2026-05-29",
+            "half": "下午"
+          }
+        ]
+      },
+      {
+        "req_id": "REQ-003",
+        "req_name": "支付模块",
+        "subtask_type": "前端",
+        "owner": "张三",
+        "start_date": "2026-06-01",
+        "start_half": "上午",
+        "end_date": "2026-06-03",
+        "end_half": "上午",
+        "days": 2.5,
+        "deadline": "2026-05-18",
+        "delayed": true,
+        "delay_days": 16,
+        "status": "已排期",
+        "reason": "",
+        "used_slots": [
+          {
+            "date": "2026-06-01",
+            "half": "上午"
+          },
+          {
+            "date": "2026-06-01",
+            "half": "下午"
+          },
+          {
+            "date": "2026-06-02",
+            "half": "上午"
+          },
+          {
+            "date": "2026-06-02",
+            "half": "下午"
+          },
+          {
+            "date": "2026-06-03",
+            "half": "上午"
+          }
+        ]
+      },
+      {
+        "req_id": "REQ-003",
+        "req_name": "支付模块",
+        "subtask_type": "测试",
+        "owner": "李四",
+        "start_date": "2026-06-04",
+        "start_half": "上午",
+        "end_date": "2026-06-05",
+        "end_half": "下午",
+        "days": 2.0,
+        "deadline": "2026-05-18",
+        "delayed": true,
+        "delay_days": 18,
+        "status": "已排期",
+        "reason": "",
+        "used_slots": [
+          {
+            "date": "2026-06-04",
+            "half": "上午"
+          },
+          {
+            "date": "2026-06-04",
+            "half": "下午"
+          },
+          {
+            "date": "2026-06-05",
+            "half": "上午"
+          },
+          {
+            "date": "2026-06-05",
+            "half": "下午"
+          }
+        ]
+      },
+      {
+        "req_id": "REQ-005",
+        "req_name": "数据分析",
+        "subtask_type": "后端",
+        "owner": "李四",
+        "start_date": "2026-06-08",
+        "start_half": "上午",
+        "end_date": "2026-06-10",
+        "end_half": "下午",
+        "days": 3.0,
+        "deadline": "2026-05-22",
+        "delayed": true,
+        "delay_days": 19,
+        "status": "已排期",
+        "reason": "",
+        "used_slots": [
+          {
+            "date": "2026-06-08",
+            "half": "上午"
+          },
+          {
+            "date": "2026-06-08",
+            "half": "下午"
+          },
+          {
+            "date": "2026-06-09",
+            "half": "上午"
+          },
+          {
+            "date": "2026-06-09",
+            "half": "下午"
+          },
+          {
+            "date": "2026-06-10",
+            "half": "上午"
+          },
+          {
+            "date": "2026-06-10",
+            "half": "下午"
+          }
+        ]
+      },
+      {
+        "req_id": "REQ-005",
+        "req_name": "数据分析",
+        "subtask_type": "前端",
+        "owner": "张三",
+        "start_date": "2026-06-11",
+        "start_half": "上午",
+        "end_date": "2026-06-16",
+        "end_half": "下午",
+        "days": 4.0,
+        "deadline": "2026-05-22",
+        "delayed": true,
+        "delay_days": 25,
+        "status": "已排期",
+        "reason": "",
+        "used_slots": [
+          {
+            "date": "2026-06-11",
+            "half": "上午"
+          },
+          {
+            "date": "2026-06-11",
+            "half": "下午"
+          },
+          {
+            "date": "2026-06-12",
+            "half": "上午"
+          },
+          {
+            "date": "2026-06-12",
+            "half": "下午"
+          },
+          {
+            "date": "2026-06-15",
+            "half": "上午"
+          },
+          {
+            "date": "2026-06-15",
+            "half": "下午"
+          },
+          {
+            "date": "2026-06-16",
+            "half": "上午"
+          },
+          {
+            "date": "2026-06-16",
+            "half": "下午"
+          }
+        ]
+      },
+      {
+        "req_id": "REQ-005",
+        "req_name": "数据分析",
+        "subtask_type": "测试",
+        "owner": "李四",
+        "start_date": "2026-06-17",
+        "start_half": "上午",
+        "end_date": "2026-06-18",
+        "end_half": "下午",
+        "days": 2.0,
+        "deadline": "2026-05-22",
+        "delayed": true,
+        "delay_days": 27,
+        "status": "已排期",
+        "reason": "",
+        "used_slots": [
+          {
+            "date": "2026-06-17",
+            "half": "上午"
+          },
+          {
+            "date": "2026-06-17",
+            "half": "下午"
+          },
+          {
+            "date": "2026-06-18",
+            "half": "上午"
+          },
+          {
+            "date": "2026-06-18",
+            "half": "下午"
+          }
+        ]
+      }
+    ],
+    "unscheduled_items": [],
+    "delayed_items": [
+      {
+        "req_id": "REQ-003",
+        "req_name": "支付模块",
+        "subtask_type": "后端",
+        "owner": "李四",
+        "start_date": "2026-05-26",
+        "start_half": "上午",
+        "end_date": "2026-05-29",
+        "end_half": "下午",
+        "days": 4.0,
+        "deadline": "2026-05-18",
+        "delayed": true,
+        "delay_days": 11,
+        "status": "已排期",
+        "reason": "",
+        "used_slots": [
+          {
+            "date": "2026-05-26",
+            "half": "上午"
+          },
+          {
+            "date": "2026-05-26",
+            "half": "下午"
+          },
+          {
+            "date": "2026-05-27",
+            "half": "上午"
+          },
+          {
+            "date": "2026-05-27",
+            "half": "下午"
+          },
+          {
+            "date": "2026-05-28",
+            "half": "上午"
+          },
+          {
+            "date": "2026-05-28",
+            "half": "下午"
+          },
+          {
+            "date": "2026-05-29",
+            "half": "上午"
+          },
+          {
+            "date": "2026-05-29",
+            "half": "下午"
+          }
+        ]
+      },
+      {
+        "req_id": "REQ-003",
+        "req_name": "支付模块",
+        "subtask_type": "前端",
+        "owner": "张三",
+        "start_date": "2026-06-01",
+        "start_half": "上午",
+        "end_date": "2026-06-03",
+        "end_half": "上午",
+        "days": 2.5,
+        "deadline": "2026-05-18",
+        "delayed": true,
+        "delay_days": 16,
+        "status": "已排期",
+        "reason": "",
+        "used_slots": [
+          {
+            "date": "2026-06-01",
+            "half": "上午"
+          },
+          {
+            "date": "2026-06-01",
+            "half": "下午"
+          },
+          {
+            "date": "2026-06-02",
+            "half": "上午"
+          },
+          {
+            "date": "2026-06-02",
+            "half": "下午"
+          },
+          {
+            "date": "2026-06-03",
+            "half": "上午"
+          }
+        ]
+      },
+      {
+        "req_id": "REQ-003",
+        "req_name": "支付模块",
+        "subtask_type": "测试",
+        "owner": "李四",
+        "start_date": "2026-06-04",
+        "start_half": "上午",
+        "end_date": "2026-06-05",
+        "end_half": "下午",
+        "days": 2.0,
+        "deadline": "2026-05-18",
+        "delayed": true,
+        "delay_days": 18,
+        "status": "已排期",
+        "reason": "",
+        "used_slots": [
+          {
+            "date": "2026-06-04",
+            "half": "上午"
+          },
+          {
+            "date": "2026-06-04",
+            "half": "下午"
+          },
+          {
+            "date": "2026-06-05",
+            "half": "上午"
+          },
+          {
+            "date": "2026-06-05",
+            "half": "下午"
+          }
+        ]
+      },
+      {
+        "req_id": "REQ-005",
+        "req_name": "数据分析",
+        "subtask_type": "后端",
+        "owner": "李四",
+        "start_date": "2026-06-08",
+        "start_half": "上午",
+        "end_date": "2026-06-10",
+        "end_half": "下午",
+        "days": 3.0,
+        "deadline": "2026-05-22",
+        "delayed": true,
+        "delay_days": 19,
+        "status": "已排期",
+        "reason": "",
+        "used_slots": [
+          {
+            "date": "2026-06-08",
+            "half": "上午"
+          },
+          {
+            "date": "2026-06-08",
+            "half": "下午"
+          },
+          {
+            "date": "2026-06-09",
+            "half": "上午"
+          },
+          {
+            "date": "2026-06-09",
+            "half": "下午"
+          },
+          {
+            "date": "2026-06-10",
+            "half": "上午"
+          },
+          {
+            "date": "2026-06-10",
+            "half": "下午"
+          }
+        ]
+      },
+      {
+        "req_id": "REQ-005",
+        "req_name": "数据分析",
+        "subtask_type": "前端",
+        "owner": "张三",
+        "start_date": "2026-06-11",
+        "start_half": "上午",
+        "end_date": "2026-06-16",
+        "end_half": "下午",
+        "days": 4.0,
+        "deadline": "2026-05-22",
+        "delayed": true,
+        "delay_days": 25,
+        "status": "已排期",
+        "reason": "",
+        "used_slots": [
+          {
+            "date": "2026-06-11",
+            "half": "上午"
+          },
+          {
+            "date": "2026-06-11",
+            "half": "下午"
+          },
+          {
+            "date": "2026-06-12",
+            "half": "上午"
+          },
+          {
+            "date": "2026-06-12",
+            "half": "下午"
+          },
+          {
+            "date": "2026-06-15",
+            "half": "上午"
+          },
+          {
+            "date": "2026-06-15",
+            "half": "下午"
+          },
+          {
+            "date": "2026-06-16",
+            "half": "上午"
+          },
+          {
+            "date": "2026-06-16",
+            "half": "下午"
+          }
+        ]
+      },
+      {
+        "req_id": "REQ-005",
+        "req_name": "数据分析",
+        "subtask_type": "测试",
+        "owner": "李四",
+        "start_date": "2026-06-17",
+        "start_half": "上午",
+        "end_date": "2026-06-18",
+        "end_half": "下午",
+        "days": 2.0,
+        "deadline": "2026-05-22",
+        "delayed": true,
+        "delay_days": 27,
+        "status": "已排期",
+        "reason": "",
+        "used_slots": [
+          {
+            "date": "2026-06-17",
+            "half": "上午"
+          },
+          {
+            "date": "2026-06-17",
+            "half": "下午"
+          },
+          {
+            "date": "2026-06-18",
+            "half": "上午"
+          },
+          {
+            "date": "2026-06-18",
+            "half": "下午"
+          }
+        ]
+      }
+    ],
+    "summary": {
+      "总需求数": 6,
+      "总子任务数": 18,
+      "已排期子任务数": 18,
+      "无法排期子任务数": 0,
+      "延期子任务数": 6,
+      "使用策略": "deadline_first",
+      "最早开始日期": "2026-05-07",
+      "最晚完成日期": "2026-06-18",
+      "人员负载统计": {
+        "李四": 17.5,
+        "王五": 5.0,
+        "赵六": 5.5,
+        "张三": 10.5
+      }
+    },
+    "strategy": "deadline_first"
+  }
+}
